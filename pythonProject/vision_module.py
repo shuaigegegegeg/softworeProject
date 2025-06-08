@@ -316,11 +316,13 @@ class VisionRecognition:
                 action != self.current_head_action and
                 current_time - self.last_head_command_time > self.command_cooldown):
 
-            if action in self.head_action_commands:
-                command = self.head_action_commands[action]
-                self.command_callback('头部动作', command)
-                self.last_head_command_time = current_time
-                print(f"✅ 头部动作: {action} → {command}")
+            if action == 'Nod':
+                self.command_callback('头部动作', '确认操作')
+            elif action == 'Shake':
+                self.command_callback('头部动作', '取消操作')
+
+            self.last_head_command_time = current_time
+            self.current_head_action = action
 
     # =================== 眼部状态监控模块 ===================
 

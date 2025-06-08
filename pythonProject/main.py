@@ -21,6 +21,7 @@ from auth import init_auth, login_manager  # 新增
 import secrets
 import string
 from werkzeug.security import generate_password_hash
+from voice_module import VoiceResponse
 
 # 确保模块能被导入
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -110,6 +111,10 @@ class CarSystem:
         self.current_user_id = None
         self.current_user_home = None
         self.app_context = None  # 用于存储应用上下文
+
+        self.pending_light_command = None
+        self.light_on_command_handled = False  # ✅ 添加是否已处理标记
+        self.light_off_command_handled = False  # ✅ 添加是否已处理标记
 
         # 初始化pygame音频模块
         try:
@@ -244,6 +249,33 @@ class CarSystem:
         except Exception as e:
             logger.error(f"❌ 获取用户家位置失败: {e}")
             return None
+
+    def get_current_user_role(self):
+        """获取当前用户角色"""
+        if not self.current_user_id:
+            return None
+
+        try:
+            if self.app_context:
+                with self.app_context:
+                    from models import User
+                    user = User.query.get(self.current_user_id)
+                    if user:
+                        return user.role
+            return None
+        except Exception as e:
+            logger.error(f"❌ 获取用户角色失败: {e}")
+            return None
+
+    def is_current_user_passenger(self):
+        """检查当前用户是否为乘客"""
+        role = self.get_current_user_role()
+        return role == 'passenger'
+
+    def is_current_user_driver(self):
+        """检查当前用户是否为司机（user角色）"""
+        role = self.get_current_user_role()
+        return role == 'user'
 
     def _format_time(self, seconds):
         """将秒数格式化为 MM:SS"""
@@ -875,6 +907,73 @@ class CarSystem:
         original_text = command['text']
         result = "未识别的指令"
 
+        cmd_type = command.get('type')
+        cmd_text = command.get('text')
+
+        # 👉 确认大灯指令：仅在没有待确认时处理
+        if cmd_type in ('light_on') and self.pending_light_command is None and not self.light_on_command_handled:
+            if (not self.is_current_user_driver()):
+                return
+            self.pending_light_command = cmd_type
+            self.light_on_command_handled = False
+            from voice_module import VoiceResponse
+            prompt = "是否确认开启大灯"
+            VoiceResponse().speak(prompt)
+            return
+            # 👉 确认大灯指令：仅在没有待确认时处理
+        if cmd_type in ('light_off') and self.pending_light_command is None and not self.light_off_command_handled:
+            if (not self.is_current_user_driver()):
+                return
+            self.pending_light_command = cmd_type
+            self.light_off_command_handled = False
+            from voice_module import VoiceResponse
+            prompt = "是否确认关闭大灯"
+            VoiceResponse().speak(prompt)
+            return
+        # 👉 处理点头或摇头确认
+        if cmd_type == '头部动作' and self.pending_light_command and not self.light_on_command_handled:
+            if (not self.is_current_user_driver()):
+                return
+            from voice_module import VoiceResponse
+            if cmd_text == '确认操作':
+                is_on = self.pending_light_command == 'light_on'
+                self.system_state['lights']['headlights'] = is_on
+                VoiceResponse().speak("大灯已开启" if is_on else "")
+            elif cmd_text == '取消操作':
+                VoiceResponse().speak("已取消操作")
+            else:
+                VoiceResponse().speak("无法识别确认指令")
+            self.light_on_command_handled = True  # ✅ 标记已处理
+            self.pending_light_command = None
+
+            # 👉 重启语音识别
+            self._restart_voice_recognition()
+            return
+        # 👉 处理点头或摇头确认
+        if cmd_type == '头部动作' and self.pending_light_command and not self.light_off_command_handled:
+            if (not self.is_current_user_driver()):
+                return
+            from voice_module import VoiceResponse
+            if cmd_text == '确认操作':
+                is_on = self.pending_light_command == 'light_on'
+                self.system_state['lights']['headlights'] = is_on
+                VoiceResponse().speak("" if is_on else "大灯已关闭")
+            elif cmd_text == '取消操作':
+                VoiceResponse().speak("已取消操作")
+            else:
+                VoiceResponse().speak("无法识别确认指令")
+            self.light_off_command_handled = True  # ✅ 标记已处理
+            self.pending_light_command = None
+
+            # 👉 重启语音识别
+            self._restart_voice_recognition()
+            return
+
+        """执行具体指令"""
+        text = command['text'].lower()
+        original_text = command['text']
+        result = "未识别的指令"
+
         try:
             # 处理分心警告相关指令
             if command.get('type') == 'driver_distraction_start':
@@ -1142,6 +1241,19 @@ class CarSystem:
 
         self.current_music_index = (self.current_music_index - 1) % len(self.music_files)
         self._update_current_music_info()
+
+    def _restart_voice_recognition(self):
+        """重启语音识别"""
+        try:
+            # 通过全局变量访问语音识别实例
+            import __main__
+            if hasattr(__main__, 'voice_recognition') and __main__.voice_recognition:
+                logger.info("🔄 触发语音识别重启...")
+                __main__.voice_recognition.command_detected.set()
+            else:
+                logger.warning("⚠️ 无法访问语音识别实例")
+        except Exception as e:
+            logger.error(f"❌ 重启语音识别失败: {e}")
 
     def get_system_state(self):
         return {
@@ -3105,6 +3217,10 @@ def main():
             logger.error(f"❌ 清理语音提醒系统失败: {e}")
 
         logger.info("✅ 系统已安全关闭")
+
+# 将 voice_recognition 设置为模块级变量，供其他地方访问
+import sys
+sys.modules[__name__].voice_recognition = voice_recognition
 
 
 if __name__ == "__main__":

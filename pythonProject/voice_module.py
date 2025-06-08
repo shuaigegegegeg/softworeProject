@@ -969,6 +969,30 @@ class VoiceRecognition:
 
             if command:
                 command_type, command_text = command
+                # 👉 拦截大灯指令，不进行自动语音播报
+                if command_type in ('light_on', 'light_off'):
+                    # 关键：在回调之前就更新去重记录
+                    self.last_recognized_text = clean_text
+                    self.last_command_time = time.time()
+                    print(f"🔒 已记录灯光指令防重复: '{clean_text}' 时间: {self.last_command_time}")
+
+                    # 重置无匹配计数器（因为找到了匹配的指令）
+                    self.reset_no_match_counter()
+
+                    # 调用回调函数
+                    try:
+                        self.command_callback(command_type, command_text)
+                        print(f"✅ 灯光指令回调成功: '{command_text}'")
+
+                        # 灯光指令处理完成后触发重启
+                        if self.restart_after_command:
+                            print(f"🔄 灯光指令识别成功，{self.restart_delay}秒后将重启语音识别...")
+                            self.command_detected.set()  # 设置指令检测事件
+
+                    except Exception as e:
+                        print(f"❌ 灯光指令回调错误: {e}")
+
+                    return
                 print(f"✅ 识别语音指令: {command_type} - '{command_text}'")
 
                 # 重置无匹配计数器（因为找到了匹配的指令）
