@@ -203,6 +203,16 @@ class CarSystem:
         self.music_monitor_thread = threading.Thread(target=self._monitor_music, daemon=True)
         self.music_monitor_thread.start()
 
+        # 分心警告系统 - 简化版本
+        self.is_driver_distracted = False
+        self.distraction_alert_thread = None
+        self.distraction_alert_stop_event = threading.Event()
+        self.distraction_alert_count = 0
+
+        # TTS队列系统（在_init_simple_tts中初始化）
+        self.tts_queue = None
+        self.tts_worker_thread = None
+
         # 简单语音提醒系统初始化
         self.tts_engine = None
         self.tts_lock = threading.Lock()
@@ -365,29 +375,197 @@ class CarSystem:
                         self.tts_engine.setProperty('voice', voice.id)
                         break
 
+            # 添加TTS队列处理
+            self.tts_queue = queue.Queue()
+            self.tts_worker_thread = threading.Thread(target=self._tts_worker, daemon=True)
+            self.tts_worker_thread.start()
+
             logger.info("✅ 简单语音提醒系统初始化成功")
         except Exception as e:
             logger.error(f"❌ 语音提醒系统初始化失败: {e}")
             self.tts_engine = None
 
+    def _tts_worker(self):
+        """TTS工作线程，串行处理语音播放"""
+        while True:
+            try:
+                # 获取语音任务
+                message = self.tts_queue.get(timeout=1)
+                if message is None:  # 停止信号
+                    break
+
+                # 播放语音
+                self._speak_direct(message)
+                self.tts_queue.task_done()
+
+            except queue.Empty:
+                continue
+            except Exception as e:
+                logger.error(f"❌ TTS工作线程错误: {e}")
+
+    def _speak_direct(self, message):
+        """直接播放语音（在TTS工作线程中调用）"""
+        try:
+            if not self.tts_engine:
+                logger.warning("⚠️ TTS引擎未初始化")
+                return
+
+            logger.info(f"🔊 开始播放语音: {message}")
+
+            # 重新初始化引擎以避免状态问题
+            try:
+                self.tts_engine.stop()
+            except:
+                pass
+
+            self.tts_engine.say(message)
+            self.tts_engine.runAndWait()
+
+            logger.info(f"✅ 语音播放完成: {message}")
+
+        except Exception as e:
+            logger.error(f"❌ 语音播放失败: {e}")
+            # 尝试重新初始化TTS引擎
+            try:
+                self.tts_engine.stop()
+                self.tts_engine = pyttsx3.init()
+                self.tts_engine.setProperty('rate', 150)
+                self.tts_engine.setProperty('volume', 0.9)
+                logger.info("🔄 TTS引擎已重新初始化")
+            except Exception as reinit_error:
+                logger.error(f"❌ TTS引擎重新初始化失败: {reinit_error}")
+
     def speak_alert(self, message):
-        """播放语音提醒（异步）"""
-        if not self.tts_engine or not message:
+        """播放语音提醒（简化版本，每次独立调用）"""
+        if not message or not message.strip():
             return
 
-        def _speak():
+        def speak_in_thread():
             try:
-                with self.tts_lock:
-                    logger.info(f"🔊 播放语音提醒: {message}")
-                    self.tts_engine.say(message)
-                    self.tts_engine.runAndWait()
-                    logger.info(f"✅ 语音提醒播放完成")
-            except Exception as e:
-                logger.error(f"❌ 语音提醒播放失败: {e}")
+                logger.info(f"🔊 开始播放语音: {message}")
 
-        # 在单独线程中播放，避免阻塞主程序
-        thread = threading.Thread(target=_speak, daemon=True)
+                # 每次都创建新的TTS引擎实例，避免状态冲突
+                import pyttsx3
+                engine = pyttsx3.init()
+                engine.setProperty('rate', 150)
+                engine.setProperty('volume', 0.9)
+
+                # 尝试设置中文语音
+                try:
+                    voices = engine.getProperty('voices')
+                    if voices:
+                        for voice in voices:
+                            if any(keyword in voice.name.lower() for keyword in ['chinese', 'zh', 'mandarin']):
+                                engine.setProperty('voice', voice.id)
+                                break
+                except:
+                    pass
+
+                # 播放语音
+                engine.say(message)
+                engine.runAndWait()
+
+                # 手动清理引擎
+                try:
+                    engine.stop()
+                    del engine
+                except:
+                    pass
+
+                logger.info(f"✅ 语音播放完成: {message}")
+
+            except Exception as e:
+                logger.error(f"❌ 语音播放失败: {e}")
+
+        # 在独立线程中播放
+        thread = threading.Thread(target=speak_in_thread, daemon=True)
         thread.start()
+
+    def start_distraction_alert(self):
+        """开始循环分心警告 - 调试版本"""
+        if self.is_driver_distracted:
+            logger.warning("⚠️ 分心警告已在运行中，忽略重复启动")
+            return
+
+        self.is_driver_distracted = True
+        self.distraction_alert_stop_event.clear()
+        self.distraction_alert_count = 0
+
+        def distraction_alert_loop():
+            """分心警告循环线程"""
+            try:
+                logger.info("🚨 开始循环分心警告")
+
+                while not self.distraction_alert_stop_event.is_set() and self.is_driver_distracted:
+                    self.distraction_alert_count += 1
+
+                    # 详细调试信息
+                    logger.info(f"🚨 === 第 {self.distraction_alert_count} 次警告开始 ===")
+                    logger.info(f"🚨 当前状态: is_driver_distracted={self.is_driver_distracted}")
+                    logger.info(f"🚨 停止事件状态: {self.distraction_alert_stop_event.is_set()}")
+
+                    # 测试简单的print输出
+                    print(f"🚨 CONSOLE: 第 {self.distraction_alert_count} 次分心警告!")
+
+                    # 调用语音
+                    logger.info(f"🚨 准备调用speak_alert...")
+                    self.speak_alert("请注意路况")
+                    logger.info(f"🚨 speak_alert调用完成")
+
+                    # 额外的语音测试 - 用系统自带的方式
+                    try:
+                        import os
+                        if os.name == 'nt':  # Windows
+                            logger.info("🚨 尝试Windows系统语音...")
+                            os.system(
+                                f'echo 请注意路况 | powershell -Command "Add-Type -AssemblyName System.Speech; $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer; $speak.Speak([Console]::ReadLine())"')
+                    except Exception as sys_voice_error:
+                        logger.error(f"❌ 系统语音失败: {sys_voice_error}")
+
+                    logger.info(f"🚨 === 第 {self.distraction_alert_count} 次警告完成，等待5秒 ===")
+
+                    # 等待3秒
+                    for i in range(30):
+                        if self.distraction_alert_stop_event.is_set():
+                            logger.info(f"🚨 在等待第{i * 0.1:.1f}秒时收到停止信号")
+                            return
+                        time.sleep(0.1)
+
+                logger.info(f"🚨 分心警告循环正常结束，共播放 {self.distraction_alert_count} 次")
+
+            except Exception as e:
+                logger.error(f"❌ 分心警告循环线程错误: {e}")
+                import traceback
+                logger.error(f"❌ 错误详情: {traceback.format_exc()}")
+            finally:
+                self.is_driver_distracted = False
+                logger.info("🚨 分心警告状态已重置")
+
+        # 启动警告线程
+        self.distraction_alert_thread = threading.Thread(target=distraction_alert_loop, daemon=True)
+        self.distraction_alert_thread.start()
+        logger.info("🚨 分心警告系统已启动")
+
+    def stop_distraction_alert(self):
+        """停止循环分心警告"""
+        if not self.is_driver_distracted:
+            logger.info("ℹ️ 分心警告未在运行，无需停止")
+            return
+
+        logger.info(f"🛑 开始停止分心警告... (已播放{self.distraction_alert_count}次)")
+
+        # 设置停止标志
+        self.is_driver_distracted = False
+        self.distraction_alert_stop_event.set()
+
+        # 等待警告线程结束
+        if self.distraction_alert_thread and self.distraction_alert_thread.is_alive():
+            logger.info("⏳ 等待分心警告线程结束...")
+            self.distraction_alert_thread.join(timeout=3)
+            if self.distraction_alert_thread.is_alive():
+                logger.warning("⚠️ 分心警告线程未能在3秒内结束")
+
+        logger.info(f"✅ 分心警告系统已停止，总共播放了 {self.distraction_alert_count} 次")
 
 
     def _monitor_music(self):
@@ -698,7 +876,28 @@ class CarSystem:
         result = "未识别的指令"
 
         try:
-            if command.get('type') == 'voice_warning':
+            # 处理分心警告相关指令
+            if command.get('type') == 'driver_distraction_start':
+                logger.info(f"🚨 收到分心开始指令: {original_text}")
+                self.start_distraction_alert()
+                # 更新系统状态
+                self.system_state['driver']['state'] = '分心'
+                self.system_state['driver']['alertness'] = 'distracted'
+                result = "检测到驾驶员分心，开始语音警告"
+                self._send_update_to_clients(result)
+                return
+
+            elif command.get('type') == 'driver_distraction_end':
+                logger.info(f"✅ 收到分心结束指令: {original_text}")
+                self.stop_distraction_alert()
+                # 更新系统状态
+                self.system_state['driver']['state'] = '正常'
+                self.system_state['driver']['alertness'] = 'normal'
+                result = "驾驶员注意力恢复正常，停止语音警告"
+                self._send_update_to_clients(result)
+                return
+
+            elif command.get('type') == 'voice_warning':
                 logger.info(f"🔊 收到语音提醒指令: {original_text}")
                 self.speak_alert(original_text)
                 result = f"语音提醒: {original_text}"
@@ -706,10 +905,10 @@ class CarSystem:
                 return
 
             # 导航指令处理
-            if any(keyword in text for keyword in ['导航', '去', '到', '前往']):
+            if any(keyword in text for keyword in ['导航', '前往']):
                 if hasattr(self, 'navigation_module') and self.navigation_module:
                     destination = None
-                    for keyword in ['导航到', '去', '到', '前往']:
+                    for keyword in ['导航到', '前往']:
                         if keyword in original_text:
                             parts = original_text.split(keyword, 1)
                             if len(parts) > 1:

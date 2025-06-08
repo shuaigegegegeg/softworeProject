@@ -328,6 +328,63 @@
             font-size: 12px;
         }
 
+        /* 分心警告样式 */
+        .distraction-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 0, 0, 0.8);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-red 1s ease-in-out infinite;
+        }
+
+        .distraction-warning.active {
+            display: flex;
+        }
+
+        .distraction-message {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .distraction-subtitle {
+            font-size: 24px;
+            color: white;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes pulse-red {
+            0% { background: rgba(255, 0, 0, 0.7); }
+            50% { background: rgba(255, 0, 0, 0.9); }
+            100% { background: rgba(255, 0, 0, 0.7); }
+        }
+
+        /* 驾驶员状态指示器增强 */
+        .driver-state.normal {
+            color: #00ff88;
+        }
+
+        .driver-state.distracted {
+            color: #ff4444;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
         .music-section {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
@@ -562,6 +619,63 @@
             flex-shrink: 0;
         }
 
+        /* 家位置信息显示卡片 */
+        .home-location-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(50, 205, 50, 0.05));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .home-location-info .home-title {
+            color: #00ff88;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .home-location-info .home-details {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+        }
+
+        .home-location-info .home-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .home-action-btn {
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 6px;
+            color: #00d4ff;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .home-action-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .home-action-btn.navigate {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .home-action-btn.navigate:hover {
+            background: rgba(0, 255, 136, 0.3);
+        }
+
         /* 响应式设计 */
         @media (max-width: 1400px) {
             .container {
@@ -678,182 +792,14 @@
             animation: slideDown 0.3s ease-out;
         }
 
-        /* 家位置确认对话框样式 */
-        .home-location-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .home-location-modal.show {
-            display: flex;
-        }
-
-        .home-location-dialog {
-            background: linear-gradient(135deg, rgba(30, 30, 60, 0.95), rgba(20, 20, 40, 0.95));
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-        }
-
-        .home-location-title {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #00d4ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .home-location-message {
-            font-size: 16px;
-            margin-bottom: 20px;
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-        }
-
-        .home-location-details {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: left;
-        }
-
-        .home-location-detail-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .home-location-detail-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .home-location-detail-label {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .home-location-detail-value {
-            color: #00ff88;
-            font-weight: 600;
-        }
-
-        .home-location-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .home-location-btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            min-width: 120px;
-        }
-
-        .home-location-btn.confirm {
-            background: linear-gradient(135deg, #00ff88, #32cd32);
-            color: white;
-        }
-
-        .home-location-btn.confirm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
-        }
-
-        .home-location-btn.cancel {
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b;
-            border: 1px solid rgba(255, 107, 107, 0.3);
-        }
-
-        .home-location-btn.cancel:hover {
-            background: rgba(255, 107, 107, 0.3);
-            transform: translateY(-2px);
-        }
-
-        /* 家位置信息显示卡片改进 */
-        .home-location-info {
-            margin-top: 15px;
-            padding: 12px;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(50, 205, 50, 0.05));
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            border-radius: 10px;
-            font-size: 13px;
-            position: relative;
-        }
-
-        .home-location-info .home-title {
-            color: #00ff88;
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .home-location-info .home-details {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.4;
-        }
-
-        .home-location-info .home-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .home-action-btn {
-            padding: 4px 8px;
-            background: rgba(0, 212, 255, 0.2);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 6px;
-            color: #00d4ff;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .home-action-btn:hover {
-            background: rgba(0, 212, 255, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .home-action-btn.navigate {
-            background: rgba(0, 255, 136, 0.2);
-            border-color: rgba(0, 255, 136, 0.3);
-            color: #00ff88;
-        }
-
-        .home-action-btn.navigate:hover {
-            background: rgba(0, 255, 136, 0.3);
-        }
-
         @keyframes slideDown {
             from { transform: translateX(-50%) translateY(-100%); }
             to { transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
     </style>
 </head>
@@ -1149,6 +1095,12 @@
         </aside>
     </div>
 
+    <!-- 分心警告覆盖层 -->
+    <div class="distraction-warning" id="distractionWarning">
+        <div class="distraction-message">⚠️ 请注意路况 ⚠️</div>
+        <div class="distraction-subtitle">检测到驾驶员分心，请集中注意力驾驶</div>
+    </div>
+
     <!-- 连接状态提示 -->
     <div class="connection-alert" id="connectionAlert">
         <span id="connectionAlertText">连接已断开，正在尝试重连...</span>
@@ -1156,7 +1108,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <script>
-        // 系统状态管理（认证版本）
+        // 系统状态管理（修复版本）
         class CarSystemUI {
             constructor() {
                 this.currentSong = {
@@ -1202,7 +1154,7 @@
                 this.mapLoaded = false;
                 this.connectionRetryCount = 0;
                 this.maxRetries = 5;
-                this.retryInterval = 3000; // 3秒
+                this.retryInterval = 3000;
 
                 this.init();
             }
@@ -1216,15 +1168,13 @@
                 this.updateDisplay();
                 this.loadNavigationStatus();
                 this.checkAuthenticationStatus();
-                this.loadUserHomeLocation(); // 新增这一行
+                this.loadUserHomeLocation();
             }
 
             checkAuthenticationStatus() {
-                // 检查用户是否已认证
                 fetch('/api/system_state')
                     .then(response => {
                         if (response.status === 401) {
-                            // 用户未认证，重定向到登录页面
                             window.location.href = '/login';
                             return;
                         }
@@ -1355,12 +1305,10 @@
                         this.showNotification('收到测试消息: ' + JSON.stringify(data), 'info');
                     });
 
-                    // 保留原有的确认对话框事件（可选功能）
+                    // 家位置设置事件
                     this.socket.on('set_home_location_request', (data) => {
                         console.log('🏠 收到设置家位置请求:', data);
-
                         if (data && data.location_data) {
-                            // 显示确认对话框
                             this.showHomeLocationConfirmDialog(data.location_data, data.message);
                         }
                     });
@@ -1385,7 +1333,19 @@
                 alert.style.display = 'none';
             }
 
-            // ============ 核心方法（与原版本相同但增加了认证检查） ============
+            showDistractionWarning(show) {
+                const warningElement = document.getElementById('distractionWarning');
+                if (warningElement) {
+                    if (show) {
+                        warningElement.classList.add('active');
+                        console.log('🚨 显示分心警告覆盖层');
+                    } else {
+                        warningElement.classList.remove('active');
+                        console.log('✅ 隐藏分心警告覆盖层');
+                    }
+                }
+            }
+
             handleSystemUpdate(data) {
                 console.log('🔄 开始处理系统状态更新:', data);
 
@@ -1442,8 +1402,6 @@
                         this.currentSong.playlist = data.state.music.playlist || [];
                         this.updatePlayButton();
                         this.updateMusicDisplay();
-                        this.updateVolumeDisplay();
-                        this.updatePlaylistInfo();
                     }
 
                     // 更新空调状态
@@ -1512,6 +1470,23 @@
                     }
                 }
 
+                if (data.state.driver) {
+                        const driverStateElement = document.getElementById('driverState');
+                        if (driverStateElement) {
+                            driverStateElement.textContent = data.state.driver.state;
+
+                            // 添加状态样式
+                            driverStateElement.className = 'driver-state';
+                            if (data.state.driver.alertness === 'distracted') {
+                                driverStateElement.classList.add('distracted');
+                                this.showDistractionWarning(true);
+                            } else {
+                                driverStateElement.classList.add('normal');
+                                this.showDistractionWarning(false);
+                            }
+                        }
+                    }
+
                 // 更新命令历史
                 if (data.command_history && Array.isArray(data.command_history)) {
                     console.log('📜 更新命令历史:', data.command_history.length, '条记录');
@@ -1542,9 +1517,6 @@
                 console.log('🔄 系统状态更新处理完成');
             }
 
-
-
-            // 为了简化，这里只包含核心的不同之处
             initMapDisplay() {
                 console.log('🗺️ 初始化地图显示...');
                 const mapFrame = document.getElementById('mapFrame');
@@ -1599,7 +1571,6 @@
                 }, 15000);
             }
 
-            // ============ 保留的核心方法 ============
             loadNavigationStatus() {
                 fetch('/api/navigation_status')
                     .then(response => {
@@ -1927,7 +1898,6 @@
                 if (totalTimeEl) totalTimeEl.textContent = this.currentSong.total_time_str;
             }
 
-
             // ============ 事件绑定方法 ============
             bindEvents() {
                 // 导航控制按钮
@@ -2019,6 +1989,11 @@
             }
 
             toggleAC() {
+                console.log('❄️ 切换空调状态');
+                // 发送命令到服务器
+                this.sendCommand('ac', this.systemData.acOn ? '关闭空调' : '开启空调');
+
+                // 本地状态更新
                 this.systemData.acOn = !this.systemData.acOn;
                 const acBtn = document.getElementById('acToggleBtn');
                 if (this.systemData.acOn) {
@@ -2032,6 +2007,11 @@
             }
 
             adjustTemperature(delta) {
+                console.log(`🌡️ 调节温度: ${delta > 0 ? '升温' : '降温'}`);
+                // 发送命令到服务器
+                this.sendCommand('ac', delta > 0 ? '升温' : '降温');
+
+                // 本地状态更新
                 this.systemData.temperature += delta;
                 this.systemData.temperature = Math.max(16, Math.min(32, this.systemData.temperature));
                 this.updateSystemDisplay();
@@ -2040,18 +2020,27 @@
             }
 
             controlWindow(action) {
+                console.log(`🪟 控制车窗: ${action}`);
                 const message = action === 'open' ? '开启车窗' : '关闭车窗';
+                this.sendCommand('window', message);
                 this.addCommand('车窗', message);
                 this.showNotification(message, 'info');
             }
 
             toggleLights(type) {
+                console.log(`💡 切换灯光: ${type}`);
                 const lightNames = {
                     'headlights': '大灯',
                     'interior': '室内灯'
                 };
                 const btn = document.getElementById(type + 'Btn');
                 const isActive = btn.classList.contains('active');
+
+                // 发送命令到服务器
+                const command = `${isActive ? '关闭' : '开启'}${lightNames[type]}`;
+                this.sendCommand('lights', command);
+
+                // 本地状态更新
                 if (isActive) {
                     btn.classList.remove('active');
                 } else {
@@ -2138,182 +2127,7 @@
                 }, 1000);
             }
 
-            async saveHomeLocation(locationData) {
-                try {
-                    console.log('🏠 开始保存家位置:', locationData);
-
-                    // 显示保存中的提示
-                    this.showNotification('正在保存家位置...', 'info');
-
-                    const response = await fetch('/api/set_home_location', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(locationData)
-                    });
-
-                    if (response.status === 401) {
-                        window.location.href = '/login';
-                        return;
-                    }
-
-                    const result = await response.json();
-
-                    if (result.status === 'success') {
-                        console.log('✅ 家位置保存成功:', result);
-                        this.showNotification(result.message, 'success');
-
-                        // 更新界面显示用户家位置信息
-                        if (result.data) {
-                            this.updateHomeLocationDisplay(result.data);
-                        }
-                    } else {
-                        console.error('❌ 家位置保存失败:', result.message);
-                        this.showNotification('保存家位置失败: ' + result.message, 'error');
-                    }
-
-                } catch (error) {
-                    console.error('❌ 保存家位置异常:', error);
-                    this.showNotification('保存家位置时发生错误', 'error');
-                }
-            }
-
-            // 显示家位置确认对话框
-            showHomeLocationConfirmDialog(locationData, message) {
-                try {
-                    console.log('🏠 收到设置家位置请求，自动确认:', locationData);
-
-                    // 验证位置数据
-                    if (!locationData || !locationData.latitude || !locationData.longitude) {
-                        console.error('❌ 位置数据无效:', locationData);
-                        this.showNotification('位置数据无效，无法设置家位置', 'error');
-                        return;
-                    }
-
-                    // 显示处理中的提示
-                    this.showNotification(`正在设置家位置: ${locationData.home_name || '未知地点'}`, 'info');
-
-                    // 直接保存家位置，无需用户确认
-                    this.saveHomeLocation(locationData);
-
-                    console.log('✅ 自动确认设置家位置完成');
-
-                } catch (error) {
-                    console.error('❌ 自动设置家位置失败:', error);
-                    this.showNotification('自动设置家位置失败', 'error');
-                }
-            }
-
-            // 确认设置家位置
-            confirmHomeLocation() {
-                try {
-                    console.log('✅ 用户确认设置家位置');
-
-                    if (this.pendingHomeLocationData) {
-                        // 调用保存方法
-                        this.saveHomeLocation(this.pendingHomeLocationData);
-
-                        // 清理数据
-                        this.pendingHomeLocationData = null;
-                    } else {
-                        console.warn('⚠️ 没有待保存的家位置数据');
-                        this.showNotification('没有可保存的位置数据', 'warning');
-                    }
-
-                    // 关闭对话框
-                    this.closeHomeLocationDialog();
-
-                } catch (error) {
-                    console.error('❌ 确认家位置设置失败:', error);
-                    this.showNotification('确认设置失败', 'error');
-                }
-            }
-
-            // 取消家位置设置
-            cancelHomeLocationDialog() {
-                try {
-                    console.log('❌ 用户取消设置家位置');
-
-                    // 清理数据
-                    this.pendingHomeLocationData = null;
-
-                    // 关闭对话框
-                    this.closeHomeLocationDialog();
-
-                    // 显示提示
-                    this.showNotification('已取消设置家位置', 'info');
-
-                } catch (error) {
-                    console.error('❌ 取消家位置设置失败:', error);
-                }
-            }
-
-            // 关闭家位置对话框
-            closeHomeLocationDialog() {
-                try {
-                    const modal = document.getElementById('homeLocationModal');
-                    if (modal) {
-                        modal.classList.remove('show');
-                    }
-                } catch (error) {
-                    console.error('❌ 关闭家位置对话框失败:', error);
-                }
-            }
-
-            // 导航到家
-            navigateToHome() {
-                try {
-                    console.log('🏠 开始导航到家');
-
-                    // 发送导航指令
-                    this.sendCommand('navigation', '导航到我家');
-                    this.addCommand('导航', '导航到家');
-                    this.showNotification('正在导航到家...', 'info');
-
-                    // 清空目的地输入框并设置为"我家"
-                    const destinationInput = document.getElementById('destinationInput');
-                    if (destinationInput) {
-                        destinationInput.value = '我家';
-                    }
-
-                } catch (error) {
-                    console.error('❌ 导航到家失败:', error);
-                    this.showNotification('导航到家失败', 'error');
-                }
-            }
-
-            // 获取家位置详细信息
-            getHomeLocationInfo() {
-                try {
-                    console.log('ℹ️ 获取家位置详细信息');
-
-                    fetch('/api/get_home_location')
-                        .then(response => {
-                            if (response.status === 401) {
-                                window.location.href = '/login';
-                                return;
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data && data.status === 'success' && data.data) {
-                                this.showNotification(`家位置: ${data.data.home_name} (${data.data.coordinates})`, 'info');
-                            } else {
-                                this.showNotification('您还没有设置家位置', 'info');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('❌ 获取家位置信息失败:', error);
-                            this.showNotification('获取家位置信息失败', 'error');
-                        });
-
-                } catch (error) {
-                    console.error('❌ 获取家位置信息异常:', error);
-                }
-            }
-
-            // 加载用户家位置信息
+            // ============ 家位置相关方法 ============
             loadUserHomeLocation() {
                 try {
                     console.log('🏠 加载用户家位置信息...');
@@ -2343,7 +2157,6 @@
                 }
             }
 
-            // 新增：更新家位置显示
             updateHomeLocationDisplay(homeData) {
                 try {
                     // 在导航状态卡片中显示家位置信息
@@ -2386,46 +2199,130 @@
                     console.error('❌ 更新家位置显示失败:', error);
                 }
             }
+
+            showHomeLocationConfirmDialog(locationData, message) {
+                try {
+                    console.log('🏠 收到设置家位置请求，自动确认:', locationData);
+
+                    // 验证位置数据
+                    if (!locationData || !locationData.latitude || !locationData.longitude) {
+                        console.error('❌ 位置数据无效:', locationData);
+                        this.showNotification('位置数据无效，无法设置家位置', 'error');
+                        return;
+                    }
+
+                    // 显示处理中的提示
+                    this.showNotification(`正在设置家位置: ${locationData.home_name || '未知地点'}`, 'info');
+
+                    // 直接保存家位置，无需用户确认
+                    this.saveHomeLocation(locationData);
+
+                    console.log('✅ 自动确认设置家位置完成');
+
+                } catch (error) {
+                    console.error('❌ 自动设置家位置失败:', error);
+                    this.showNotification('自动设置家位置失败', 'error');
+                }
+            }
+
+            async saveHomeLocation(locationData) {
+                try {
+                    console.log('🏠 开始保存家位置:', locationData);
+
+                    // 显示保存中的提示
+                    this.showNotification('正在保存家位置...', 'info');
+
+                    const response = await fetch('/api/set_home_location', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(locationData)
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        console.log('✅ 家位置保存成功:', result);
+                        this.showNotification(result.message, 'success');
+
+                        // 更新界面显示用户家位置信息
+                        if (result.data) {
+                            this.updateHomeLocationDisplay(result.data);
+                        }
+                    } else {
+                        console.error('❌ 家位置保存失败:', result.message);
+                        this.showNotification('保存家位置失败: ' + result.message, 'error');
+                    }
+
+                } catch (error) {
+                    console.error('❌ 保存家位置异常:', error);
+                    this.showNotification('保存家位置时发生错误', 'error');
+                }
+            }
+
+            navigateToHome() {
+                try {
+                    console.log('🏠 开始导航到家');
+
+                    // 发送导航指令
+                    this.sendCommand('navigation', '导航到我家');
+                    this.addCommand('导航', '导航到家');
+                    this.showNotification('正在导航到家...', 'info');
+
+                    // 清空目的地输入框并设置为"我家"
+                    const destinationInput = document.getElementById('destinationInput');
+                    if (destinationInput) {
+                        destinationInput.value = '我家';
+                    }
+
+                } catch (error) {
+                    console.error('❌ 导航到家失败:', error);
+                    this.showNotification('导航到家失败', 'error');
+                }
+            }
+
+            getHomeLocationInfo() {
+                try {
+                    console.log('ℹ️ 获取家位置详细信息');
+
+                    fetch('/api/get_home_location')
+                        .then(response => {
+                            if (response.status === 401) {
+                                window.location.href = '/login';
+                                return;
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data && data.status === 'success' && data.data) {
+                                this.showNotification(`家位置: ${data.data.home_name} (${data.data.coordinates})`, 'info');
+                            } else {
+                                this.showNotification('您还没有设置家位置', 'info');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ 获取家位置信息失败:', error);
+                            this.showNotification('获取家位置信息失败', 'error');
+                        });
+
+                } catch (error) {
+                    console.error('❌ 获取家位置信息异常:', error);
+                }
+            }
         }
 
         // 初始化系统
         document.addEventListener('DOMContentLoaded', () => {
             window.carSystem = new CarSystemUI();
-            console.log('🚗 车载多模态交互系统界面已启动（认证版本）');
+            console.log('🚗 车载多模态交互系统界面已启动（修复版本）');
             console.log('🔧 carSystem实例已创建并设为全局变量');
         });
-
-        // 添加CSS动画
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
-<!-- 家位置确认对话框 -->
-    <div class="home-location-modal" id="homeLocationModal">
-        <div class="home-location-dialog">
-            <div class="home-location-title">
-                🏠 设置家位置
-            </div>
-            <div class="home-location-message" id="homeLocationMessage">
-                是否将此地点设置为您的家？
-            </div>
-            <div class="home-location-details" id="homeLocationDetails">
-                <!-- 位置详情将在这里动态填充 -->
-            </div>
-            <div class="home-location-actions">
-                <button class="home-location-btn cancel" onclick="carSystem.cancelHomeLocationDialog()">
-                    取消
-                </button>
-                <button class="home-location-btn confirm" onclick="carSystem.confirmHomeLocation()">
-                    确认设置
-                </button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

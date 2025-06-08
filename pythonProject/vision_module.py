@@ -424,12 +424,15 @@ class VisionRecognition:
                 self.driver_attention_status = "Distracted"
                 # 防止频繁警告
                 if current_time - self.last_attention_alert_time > 5.0:
-                    self.command_callback('注意力警告', '检测到驾驶员分心 - 长时间闭眼')
+                    # 发送开始分心警告的指令
+                    self.command_callback('driver_distraction_start', '检测到驾驶员分心 - 长时间闭眼')
                     self.last_attention_alert_time = current_time
                     print("⚠️  驾驶员注意力警告: 检测到长时间闭眼!")
         else:
             if self.driver_attention_status == "Distracted":
                 self.driver_attention_status = "Normal"
+                # 发送停止分心警告的指令
+                self.command_callback('driver_distraction_end', '驾驶员注意力恢复正常')
                 print("✅ 驾驶员注意力恢复正常")
 
     # =================== 核心处理流程 ===================
