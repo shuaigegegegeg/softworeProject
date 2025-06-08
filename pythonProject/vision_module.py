@@ -4,12 +4,13 @@ import numpy as np
 from collections import deque
 import mediapipe as mp
 from typing import Optional, Callable
+import threading
 import math
 
 
-class EnhancedVisionRecognition:
+class VisionRecognition:
     """
-    车载智能视觉识别模块
+    车载智能视觉识别模块 - 兼容main.py的集成版本
     集成功能：
     1. 手势识别 - 控制音乐、空调等
     2. 头部动作识别 - 确认/取消操作
@@ -18,6 +19,13 @@ class EnhancedVisionRecognition:
 
     def __init__(self, command_callback: Optional[Callable[[str, str], None]] = None):
         self.command_callback = command_callback or self.default_callback
+
+        # ===== 集成兼容性属性 =====
+        self.is_running = False
+        self.camera_cap = None
+        self.current_frame = None
+        self.vision_thread = None
+        self.should_stop = False
 
         # ===== MediaPipe 初始化 =====
         self.mp_hands = mp.solutions.hands
@@ -43,34 +51,34 @@ class EnhancedVisionRecognition:
         )
 
         # ===== 手势识别参数 =====
-        self.finger_threshold = 0.02  # 手指伸直阈值
-        self.gesture_stability_frames = 5  # 手势稳定确认帧数
+        self.finger_threshold = 0.02
+        self.gesture_stability_frames = 5
         self.gesture_history = deque(maxlen=self.gesture_stability_frames)
         self.current_gesture = "None"
 
         # ===== 头部动作识别参数 =====
-        self.head_movement_threshold = 0.1  # 头部移动阈值（降低以提高敏感度）
-        self.nod_threshold = 0.1  # 点头专用阈值（更敏感）
-        self.head_action_frames = 10  # 头部动作确认帧数（增加以获得更好的检测）
-        self.head_movement_history = deque(maxlen=20)  # 增加历史记录
+        self.head_movement_threshold = 0.1
+        self.nod_threshold = 0.1
+        self.head_action_frames = 10
+        self.head_movement_history = deque(maxlen=20)
         self.head_action_history = deque(maxlen=self.head_action_frames)
         self.current_head_action = "None"
 
         # ===== 眼部状态监控参数 =====
-        self.eye_aspect_ratio_threshold = 0.21  # 眼睛闭合阈值
-        self.eye_closed_frames_threshold = 60  # 闭眼帧数阈值 (约2秒 @30fps)
+        self.eye_aspect_ratio_threshold = 0.25
+        self.eye_closed_frames_threshold = 60
         self.consecutive_closed_frames = 0
         self.eyes_status = "Open"
         self.driver_attention_status = "Normal"
+        self.ear_history = deque(maxlen=10)
 
         # ===== 指令控制参数 =====
-        self.command_cooldown = 2.0  # 指令冷却时间
+        self.command_cooldown = 2.0
         self.last_command_time = 0
         self.last_head_command_time = 0
         self.last_attention_alert_time = 0
 
         # ===== 系统状态 =====
-        self.is_running = False
         self.frame_count = 0
 
         # ===== 指令映射配置 =====
@@ -89,52 +97,58 @@ class EnhancedVisionRecognition:
         # ===== 面部关键点索引 =====
         self.face_landmarks_indices = {
             'nose_tip': 1,
-            'left_eye': [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246],
-            'right_eye': [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398],
-            'left_eye_corners': [33, 133],
-            'right_eye_corners': [362, 263]
+            'left_eye': {
+                'outer_corner': 33,
+                'inner_corner': 133,
+                'top_1': 159,
+                'top_2': 158,
+                'bottom_1': 145,
+                'bottom_2': 153
+            },
+            'right_eye': {
+                'outer_corner': 362,
+                'inner_corner': 263,
+                'top_1': 386,
+                'top_2': 385,
+                'bottom_1': 374,
+                'bottom_2': 380
+            }
         }
 
-        self._print_startup_info()
-
-    def _print_startup_info(self):
-        """打印启动信息"""
-        print("🎯 车载智能视觉识别系统已启动")
-        print("=" * 50)
-        print("✋ 手势识别功能:")
-        for gesture, command in self.gesture_commands.items():
-            print(f"   {gesture} → {command}")
-        print("\n🤖 头部动作识别功能:")
-        for action, command in self.head_action_commands.items():
-            print(f"   {action} → {command}")
-        print("\n👁️ 驾驶员注意力监控:")
-        print("   闭眼超过2秒 → 分心警告")
-        print("\n⚙️ 检测参数:")
-        print(f"   点头检测阈值: {self.nod_threshold}")
-        print(f"   摇头检测阈值: {self.head_movement_threshold}")
-        print(f"   头部动作确认帧数: {self.head_action_frames}")
-        print("=" * 50)
-        print("💡 调试提示: 观察界面下方的 Y_range 和 X_range 数值")
-        print("   点头时 Y_range 应该超过点头阈值")
-        print("   摇头时 X_range 应该超过摇头阈值")
-        print("\n🔧 实时调试按键:")
-        print("   1/2: 调整点头阈值（减少/增加）")
-        print("   3/4: 调整摇头阈值（减少/增加）")
-        print("   R: 重置所有参数")
-        print("   Q/ESC: 退出系统")
+        print("🎯 车载智能视觉识别系统已初始化")
 
     def default_callback(self, cmd_type: str, cmd_text: str):
         """默认回调函数"""
         timestamp = time.strftime("%H:%M:%S")
         print(f"[{timestamp}] 🎯 {cmd_type}: {cmd_text}")
 
+    def get_current_frame(self):
+        """获取当前帧 - 兼容接口"""
+        return self.current_frame
+
+    def test_camera(self, camera_index: int = 0) -> bool:
+        """测试摄像头 - 兼容接口"""
+        try:
+            cap = cv2.VideoCapture(camera_index)
+            if not cap.isOpened():
+                print(f"❌ 无法打开摄像头 {camera_index}")
+                return False
+            ret, frame = cap.read()
+            cap.release()
+            if ret:
+                print(f"✅ 摄像头 {camera_index} 测试成功")
+                return True
+            else:
+                print(f"❌ 摄像头 {camera_index} 无法读取帧")
+                return False
+        except Exception as e:
+            print(f"❌ 摄像头测试错误: {e}")
+            return False
+
     # =================== 手势识别模块 ===================
 
     def detect_gesture(self, hands_results):
-        """
-        手势识别核心算法
-        支持：张开手掌、握拳、食指向上、食指+中指向上
-        """
+        """手势识别核心算法"""
         if not hands_results.multi_hand_landmarks:
             return "None"
 
@@ -163,12 +177,6 @@ class EnhancedVisionRecognition:
             pip = finger_landmarks[finger_name]['pip']
             extended = tip.y < pip.y - self.finger_threshold
             fingers_extended.append(extended)
-
-        # 调试输出（每20帧一次）
-        if self.frame_count % 20 == 0:
-            finger_names = ['T', 'I', 'M', 'R', 'P']
-            finger_status = [f"{name}:{int(ext)}" for name, ext in zip(finger_names, fingers_extended)]
-            print(f"手指状态: [{', '.join(finger_status)}]")
 
         # 手势识别逻辑
         extended_count = sum(fingers_extended)
@@ -224,10 +232,7 @@ class EnhancedVisionRecognition:
     # =================== 头部动作识别模块 ===================
 
     def detect_head_action(self, face_results):
-        """
-        头部动作识别核心算法
-        支持：点头、摇头
-        """
+        """头部动作识别核心算法"""
         if not face_results.multi_face_landmarks:
             return "None"
 
@@ -247,7 +252,7 @@ class EnhancedVisionRecognition:
             # 分析头部移动模式
             positions = list(self.head_movement_history)
 
-            # Y轴变化分析（点头）- 图像坐标系Y向下递增
+            # Y轴变化分析（点头）
             y_positions = [pos[1] for pos in positions]
             y_range = max(y_positions) - min(y_positions)
 
@@ -255,21 +260,9 @@ class EnhancedVisionRecognition:
             x_positions = [pos[0] for pos in positions]
             x_range = max(x_positions) - min(x_positions)
 
-            # 调试输出（每30帧一次）
-            if self.frame_count % 30 == 0:
-                print(f"头部移动分析: Y_range={y_range:.4f}(阈值:{self.nod_threshold:.4f}), X_range={x_range:.4f}")
-                print(f"Y位置变化: {[f'{y:.3f}' for y in y_positions[-8:]]}")
-                if y_range > self.nod_threshold:
-                    max_y_idx = y_positions.index(max(y_positions))
-                    print(f"检测到Y轴变化，最低点位置: {max_y_idx}/{len(y_positions)}")
-
-            # 点头检测 - 使用专用阈值
-            if y_range > self.nod_threshold:  # 使用更敏感的点头阈值
-                # 方法1：寻找点头模式
+            # 点头检测
+            if y_range > self.nod_threshold:
                 max_y_idx = y_positions.index(max(y_positions))
-                min_y_idx = y_positions.index(min(y_positions))
-
-                # 点头模式：最低点在中间部分，且有明显的下降再上升
                 if 3 <= max_y_idx <= len(y_positions) - 4:
                     start_y = y_positions[0]
                     end_y = y_positions[-1]
@@ -279,33 +272,14 @@ class EnhancedVisionRecognition:
                             max_y > end_y + self.nod_threshold * 0.6):
                         return "Nod"
 
-                # 方法2：简化的点头检测（备选方案）
-                # 检查是否有明显的先下后上模式
-                mid_point = len(y_positions) // 2
-                first_quarter = y_positions[:mid_point]
-                second_quarter = y_positions[mid_point:]
-
-                if len(first_quarter) >= 3 and len(second_quarter) >= 3:
-                    # 前半段平均值vs后半段平均值，以及整体变化
-                    first_avg = sum(first_quarter) / len(first_quarter)
-                    second_avg = sum(second_quarter) / len(second_quarter)
-
-                    # 前半段Y值应该增大（头向下），后半段Y值应该减小（头向上）
-                    if (max(first_quarter) > min(first_quarter) + self.nod_threshold * 0.4 and
-                            max(second_quarter) > min(second_quarter) + self.nod_threshold * 0.4 and
-                            first_avg < second_avg):  # 前半段平均位置高于后半段
-                        return "Nod"
-
-            # 摇头检测 - 保持原有逻辑
+            # 摇头检测
             if x_range > self.head_movement_threshold:
-                # 检测左右运动中的方向变化
                 direction_changes = 0
                 for i in range(1, len(x_positions) - 1):
                     if ((x_positions[i] > x_positions[i - 1] and x_positions[i] > x_positions[i + 1]) or
                             (x_positions[i] < x_positions[i - 1] and x_positions[i] < x_positions[i + 1])):
                         direction_changes += 1
 
-                # 摇头需要至少2次方向变化
                 if direction_changes >= 2:
                     return "Shake"
 
@@ -352,19 +326,32 @@ class EnhancedVisionRecognition:
 
     def calculate_eye_aspect_ratio(self, eye_landmarks):
         """计算眼睛宽高比 (Eye Aspect Ratio - EAR)"""
-        # 垂直距离
-        A = np.linalg.norm(np.array([eye_landmarks[1].x, eye_landmarks[1].y]) -
-                           np.array([eye_landmarks[5].x, eye_landmarks[5].y]))
-        B = np.linalg.norm(np.array([eye_landmarks[2].x, eye_landmarks[2].y]) -
-                           np.array([eye_landmarks[4].x, eye_landmarks[4].y]))
+        try:
+            # 获取眼部6个关键点的坐标
+            points = []
+            for landmark in eye_landmarks:
+                points.append([landmark.x, landmark.y])
 
-        # 水平距离
-        C = np.linalg.norm(np.array([eye_landmarks[0].x, eye_landmarks[0].y]) -
-                           np.array([eye_landmarks[3].x, eye_landmarks[3].y]))
+            points = np.array(points)
 
-        # EAR = (A + B) / (2.0 * C)
-        ear = (A + B) / (2.0 * C)
-        return ear
+            # 计算垂直距离
+            vertical_1 = np.linalg.norm(points[1] - points[5])
+            vertical_2 = np.linalg.norm(points[2] - points[4])
+
+            # 计算水平距离
+            horizontal = np.linalg.norm(points[0] - points[3])
+
+            # EAR = (vertical_1 + vertical_2) / (2.0 * horizontal)
+            if horizontal > 0:
+                ear = (vertical_1 + vertical_2) / (2.0 * horizontal)
+            else:
+                ear = 0.0
+
+            return ear
+
+        except Exception as e:
+            print(f"EAR计算错误: {e}")
+            return 0.3
 
     def detect_eye_status(self, face_results):
         """眼部状态检测"""
@@ -375,27 +362,57 @@ class EnhancedVisionRecognition:
         landmarks = face_landmarks.landmark
 
         try:
-            # 获取左右眼关键点
-            left_eye_points = [landmarks[i] for i in [33, 7, 163, 144, 145, 153]]
-            right_eye_points = [landmarks[i] for i in [362, 382, 381, 380, 374, 373]]
+            # 获取左眼关键点
+            left_eye_indices = [
+                self.face_landmarks_indices['left_eye']['outer_corner'],
+                self.face_landmarks_indices['left_eye']['top_1'],
+                self.face_landmarks_indices['left_eye']['top_2'],
+                self.face_landmarks_indices['left_eye']['inner_corner'],
+                self.face_landmarks_indices['left_eye']['bottom_1'],
+                self.face_landmarks_indices['left_eye']['bottom_2']
+            ]
+
+            # 获取右眼关键点
+            right_eye_indices = [
+                self.face_landmarks_indices['right_eye']['outer_corner'],
+                self.face_landmarks_indices['right_eye']['top_1'],
+                self.face_landmarks_indices['right_eye']['top_2'],
+                self.face_landmarks_indices['right_eye']['inner_corner'],
+                self.face_landmarks_indices['right_eye']['bottom_1'],
+                self.face_landmarks_indices['right_eye']['bottom_2']
+            ]
+
+            # 获取实际的关键点坐标
+            left_eye_points = [landmarks[i] for i in left_eye_indices]
+            right_eye_points = [landmarks[i] for i in right_eye_indices]
 
             # 计算双眼EAR
             left_ear = self.calculate_eye_aspect_ratio(left_eye_points)
             right_ear = self.calculate_eye_aspect_ratio(right_eye_points)
             avg_ear = (left_ear + right_ear) / 2.0
 
+            # 将EAR值添加到历史记录中进行平滑处理
+            self.ear_history.append(avg_ear)
+
+            # 使用移动平均来平滑EAR值
+            if len(self.ear_history) > 0:
+                smooth_ear = sum(self.ear_history) / len(self.ear_history)
+            else:
+                smooth_ear = avg_ear
+
             # 眼部状态判断
-            if avg_ear < self.eye_aspect_ratio_threshold:
+            if smooth_ear < self.eye_aspect_ratio_threshold:
                 self.consecutive_closed_frames += 1
                 if self.consecutive_closed_frames >= self.eye_closed_frames_threshold:
-                    return "Closed_Long"  # 长时间闭眼
+                    return "Closed_Long"
                 else:
-                    return "Closed"  # 短时间闭眼
+                    return "Closed"
             else:
                 self.consecutive_closed_frames = 0
-                return "Open"  # 睁眼
+                return "Open"
 
-        except (IndexError, AttributeError):
+        except (IndexError, AttributeError) as e:
+            print(f"眼部检测错误: {e}")
             return "Unknown"
 
     def check_driver_attention(self, eye_status):
@@ -418,11 +435,13 @@ class EnhancedVisionRecognition:
     # =================== 核心处理流程 ===================
 
     def process_frame(self, frame):
-        """
-        单帧处理主流程
-        集成所有识别功能
-        """
+        """单帧处理主流程"""
+        if frame is None:
+            return None
+
         self.frame_count += 1
+        self.current_frame = frame.copy()  # 更新当前帧
+
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # MediaPipe 检测
@@ -455,10 +474,11 @@ class EnhancedVisionRecognition:
 
         return display_frame
 
-    # =================== 可视化界面 ===================
-
     def draw_interface(self, frame, hands_results, face_results):
         """绘制用户界面"""
+        if frame is None:
+            return None
+
         # 绘制手部关键点
         if hands_results.multi_hand_landmarks:
             for hand_landmarks in hands_results.multi_hand_landmarks:
@@ -470,18 +490,27 @@ class EnhancedVisionRecognition:
         # 绘制眼部关键点
         if face_results.multi_face_landmarks:
             for face_landmarks in face_results.multi_face_landmarks:
-                # 只绘制眼部关键点
-                for idx in self.face_landmarks_indices['left_eye'] + self.face_landmarks_indices['right_eye']:
-                    landmark = face_landmarks.landmark[idx]
+                landmarks = face_landmarks.landmark
+
+                # 绘制左眼关键点
+                for key, idx in self.face_landmarks_indices['left_eye'].items():
+                    landmark = landmarks[idx]
                     x = int(landmark.x * frame.shape[1])
                     y = int(landmark.y * frame.shape[0])
-                    cv2.circle(frame, (x, y), 1, (0, 255, 0), -1)
+                    cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)
+
+                # 绘制右眼关键点
+                for key, idx in self.face_landmarks_indices['right_eye'].items():
+                    landmark = landmarks[idx]
+                    x = int(landmark.x * frame.shape[1])
+                    y = int(landmark.y * frame.shape[0])
+                    cv2.circle(frame, (x, y), 2, (0, 255, 0), -1)
 
         height, width = frame.shape[:2]
 
         # 半透明背景
         overlay = frame.copy()
-        cv2.rectangle(overlay, (10, 10), (520, 300), (0, 0, 0), -1)
+        cv2.rectangle(overlay, (10, 10), (400, 200), (0, 0, 0), -1)
         cv2.addWeighted(overlay, 0.7, frame, 0.3, 0, frame)
 
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -502,89 +531,107 @@ class EnhancedVisionRecognition:
         cv2.putText(frame, f"Attention: {self.driver_attention_status}", (20, 130),
                     font, 0.6, attention_color, 2)
 
-        # === 功能说明区域 ===
-        y_offset = 160
-        features = [
-            "=== 手势功能 ===",
-            "张开手掌 → 播放音乐",
-            "握拳 → 暂停音乐",
-            "食指向上 → 升温",
-            "双指向上 → 降温",
-            "",
-            "=== 头部动作 ===",
-            "点头 → 确认操作",
-            "摇头 → 取消操作",
-            "",
-            "=== 按键调试 ===",
-            "1/2: 点头阈值 ±",
-            "3/4: 摇头阈值 ±",
-            "R: 重置参数",
-            "Q/ESC: 退出"
-        ]
-
-        for i, feature in enumerate(features):
-            if feature == "":
-                continue
-
-            color = (255, 255, 255)
-            if "===" in feature:
-                color = (0, 255, 255)
-            elif (self.current_gesture in feature) or (self.current_head_action in feature):
-                color = (0, 255, 0)
-
-            cv2.putText(frame, feature, (20, y_offset + i * 15),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
-
-        # === 系统信息区域 ===
-        # 头部动作调试信息
-        if len(self.head_movement_history) > 0:
-            current_pos = self.head_movement_history[-1]
-            cv2.putText(frame, f"Head Pos: ({current_pos[0]:.3f}, {current_pos[1]:.3f})",
-                        (20, height - 80), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-
-            if len(self.head_movement_history) >= 5:
-                positions = list(self.head_movement_history)
-                y_positions = [pos[1] for pos in positions]
-                x_positions = [pos[0] for pos in positions]
-                y_range = max(y_positions) - min(y_positions)
-                x_range = max(x_positions) - min(x_positions)
-
-                cv2.putText(frame, f"Y_range: {y_range:.4f} (需要>{self.nod_threshold:.4f})",
-                            (20, height - 60), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                            (0, 255, 0) if y_range > self.nod_threshold else (255, 255, 255), 1)
-                cv2.putText(frame, f"X_range: {x_range:.4f} (需要>{self.head_movement_threshold:.4f})",
-                            (20, height - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
-                            (0, 255, 0) if x_range > self.head_movement_threshold else (255, 255, 255), 1)
-
-        # 闭眼计数器
-        if self.consecutive_closed_frames > 0:
-            closed_seconds = self.consecutive_closed_frames / 30.0
-            cv2.putText(frame, f"Closed: {closed_seconds:.1f}s", (350, 40),
-                        font, 0.5, (0, 165, 255), 1)
-
-        # 指令冷却状态
-        current_time = time.time()
-        cooldown_remaining = max(0, self.command_cooldown - (current_time - self.last_command_time))
-        if cooldown_remaining > 0:
-            cv2.putText(frame, f"Gesture Cooldown: {cooldown_remaining:.1f}s", (280, height - 80),
-                        font, 0.4, (255, 100, 100), 1)
-
-        head_cooldown_remaining = max(0, self.command_cooldown - (current_time - self.last_head_command_time))
-        if head_cooldown_remaining > 0:
-            cv2.putText(frame, f"Head Cooldown: {head_cooldown_remaining:.1f}s", (280, height - 60),
-                        font, 0.4, (255, 100, 100), 1)
+        # EAR值显示
+        if len(self.ear_history) > 0:
+            current_ear = self.ear_history[-1]
+            cv2.putText(frame, f"EAR: {current_ear:.3f}", (20, 160),
+                        font, 0.5, (255, 255, 255), 1)
 
         # 帧数计数
-        cv2.putText(frame, f"Frame: {self.frame_count}", (450, height - 20),
+        cv2.putText(frame, f"Frame: {self.frame_count}", (300, height - 20),
                     font, 0.4, (255, 255, 0), 1)
 
         return frame
 
-    # =================== 系统控制 ===================
+    # =================== 主要运行接口 ===================
 
-    def start_recognition(self, camera_index=0):
-        """启动视觉识别系统"""
-        print(f"\n🚀 启动车载智能视觉识别系统")
+    def start_camera_recognition(self, camera_index: int = 0):
+        """开始摄像头识别 - 兼容main.py的接口"""
+        if self.is_running:
+            print("⚠️ 视觉识别已在运行中")
+            return
+
+        print(f"🚀 启动车载智能视觉识别系统（摄像头 {camera_index}）")
+
+        self.should_stop = False
+        self.is_running = True
+
+        def recognition_worker():
+            try:
+                # 初始化摄像头
+                self.camera_cap = cv2.VideoCapture(camera_index)
+                if not self.camera_cap.isOpened():
+                    print(f"❌ 无法打开摄像头 {camera_index}")
+                    self.is_running = False
+                    return
+
+                # 摄像头配置
+                self.camera_cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                self.camera_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                self.camera_cap.set(cv2.CAP_PROP_FPS, 30)
+
+                print("✅ 视觉识别启动成功，开始处理视频流...")
+
+                while self.is_running and not self.should_stop:
+                    ret, frame = self.camera_cap.read()
+                    if not ret:
+                        print("❌ 无法读取摄像头帧")
+                        break
+
+                    # 处理帧
+                    processed_frame = self.process_frame(frame)
+
+                    # 在集成模式下，不显示窗口，只处理数据
+                    # 如果需要调试，可以取消注释下面的代码
+                    # if processed_frame is not None:
+                    #     cv2.imshow("车载智能视觉识别", processed_frame)
+                    #     if cv2.waitKey(1) & 0xFF == 27:  # ESC退出
+                    #         break
+
+                    time.sleep(0.033)  # 约30fps
+
+            except Exception as e:
+                print(f"❌ 视觉识别运行错误: {e}")
+            finally:
+                self.cleanup()
+
+        # 在独立线程中运行识别
+        self.vision_thread = threading.Thread(target=recognition_worker, daemon=True)
+        self.vision_thread.start()
+
+    def stop(self):
+        """停止识别系统 - 兼容main.py的接口"""
+        print("🛑 停止车载智能视觉识别系统")
+        self.should_stop = True
+        self.is_running = False
+
+        # 等待线程结束
+        if self.vision_thread and self.vision_thread.is_alive():
+            self.vision_thread.join(timeout=2)
+
+        self.cleanup()
+
+    def cleanup(self):
+        """清理资源"""
+        try:
+            if self.camera_cap:
+                self.camera_cap.release()
+                self.camera_cap = None
+
+            cv2.destroyAllWindows()
+
+            # 重置状态
+            self.current_frame = None
+            self.is_running = False
+
+        except Exception as e:
+            print(f"清理视觉识别资源时出错: {e}")
+
+    # =================== 调试和测试接口 ===================
+
+    def start_recognition_with_display(self, camera_index: int = 0):
+        """启动带显示界面的识别（用于调试）"""
+        print(f"\n🚀 启动车载智能视觉识别系统（调试模式）")
 
         cap = cv2.VideoCapture(camera_index)
         if not cap.isOpened():
@@ -596,7 +643,7 @@ class EnhancedVisionRecognition:
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         cap.set(cv2.CAP_PROP_FPS, 30)
 
-        cv2.namedWindow("车载智能视觉识别", cv2.WINDOW_NORMAL)
+        cv2.namedWindow("车载智能视觉识别（调试模式）", cv2.WINDOW_NORMAL)
         self.is_running = True
 
         try:
@@ -608,7 +655,8 @@ class EnhancedVisionRecognition:
 
                 # 处理帧
                 processed_frame = self.process_frame(frame)
-                cv2.imshow("车载智能视觉识别", processed_frame)
+                if processed_frame is not None:
+                    cv2.imshow("车载智能视觉识别（调试模式）", processed_frame)
 
                 # 按键控制
                 key = cv2.waitKey(1) & 0xFF
@@ -616,62 +664,12 @@ class EnhancedVisionRecognition:
                     break
                 elif key == ord('q'):
                     break
-                elif key == ord('1'):  # 降低点头阈值
-                    self.nod_threshold = max(0.005, self.nod_threshold - 0.005)
-                    print(f"点头阈值调整为: {self.nod_threshold:.4f}")
-                elif key == ord('2'):  # 提高点头阈值
-                    self.nod_threshold = min(0.050, self.nod_threshold + 0.005)
-                    print(f"点头阈值调整为: {self.nod_threshold:.4f}")
-                elif key == ord('3'):  # 降低摇头阈值
-                    self.head_movement_threshold = max(0.010, self.head_movement_threshold - 0.005)
-                    print(f"摇头阈值调整为: {self.head_movement_threshold:.4f}")
-                elif key == ord('4'):  # 提高摇头阈值
-                    self.head_movement_threshold = min(0.050, self.head_movement_threshold + 0.005)
-                    print(f"摇头阈值调整为: {self.head_movement_threshold:.4f}")
-                elif key == ord('r'):  # 重置参数
-                    self.nod_threshold = 0.015
-                    self.head_movement_threshold = 0.025
-                    print("参数已重置为默认值")
 
         except KeyboardInterrupt:
             print("用户中断")
         finally:
             self.stop()
-
-    def stop(self):
-        """停止识别系统"""
-        print("🛑 停止车载智能视觉识别系统")
-        self.is_running = False
-        cv2.destroyAllWindows()
-
-    # =================== 兼容性接口 ===================
-
-    def test_camera(self, camera_index: int = 0) -> bool:
-        """测试摄像头"""
-        try:
-            cap = cv2.VideoCapture(camera_index)
-            if not cap.isOpened():
-                print(f"❌ 无法打开摄像头 {camera_index}")
-                return False
-            ret, frame = cap.read()
             cap.release()
-            if ret:
-                print(f"✅ 摄像头 {camera_index} 测试成功")
-                return True
-            else:
-                print(f"❌ 摄像头 {camera_index} 无法读取帧")
-                return False
-        except Exception as e:
-            print(f"❌ 摄像头测试错误: {e}")
-            return False
-
-    def start_camera_recognition(self, camera_index: int = 0):
-        """开始摄像头识别（兼容原接口）"""
-        self.start_recognition(camera_index)
-
-    def get_current_frame(self):
-        """获取当前摄像头帧（兼容原接口）"""
-        return None
 
 
 # =================== 测试和演示 ===================
@@ -681,12 +679,12 @@ def test_vision_system():
 
     def command_callback(cmd_type, cmd_text):
         print(f"🎯 系统接收指令: [{cmd_type}] {cmd_text}")
-        # 这里可以调用实际的车载系统API
 
-    vision = EnhancedVisionRecognition(command_callback)
+    vision = VisionRecognition(command_callback)
 
     try:
-        vision.start_recognition()
+        # 使用调试模式启动（带显示界面）
+        vision.start_recognition_with_display()
     except KeyboardInterrupt:
         print("测试结束")
     finally:
