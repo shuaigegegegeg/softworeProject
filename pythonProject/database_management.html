@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库管理 - 车载系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .db-container {
+            min-height: 100vh;
+        }
+
+        .db-header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .db-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .db-nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            padding: 8px 16px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            color: #00d4ff;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn.danger {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+
+        .nav-btn.danger:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .db-main {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            min-height: calc(100vh - 70px);
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            height: fit-content;
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .add-btn {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #00ff88, #32cd32);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 60px;
+            display: inline-block;
+        }
+
+        .role-admin {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+
+        .role-user {
+            background: rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+        }
+
+        .role-passenger {
+            background: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .role-system_admin {
+            background: rgba(255, 165, 0, 0.3);
+            color: #ffaa00;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+        }
+
+        .delete-btn {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(30, 30, 60, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00d4ff;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #00d4ff, #5b86e5);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+
+        .search-bar {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .code-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .code-unused {
+            background: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .code-used {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #00ff88, #32cd32);
+            color: white;
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ff6b6b, #ff4444);
+            color: white;
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #00d4ff, #5b86e5);
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00d4ff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1200px) {
+            .db-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .db-main {
+                padding: 15px;
+                gap: 15px;
+            }
+
+            .section-card {
+                padding: 20px;
+            }
+
+            .data-table {
+                font-size: 13px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #5b86e5, #00d4ff);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="db-container">
+        <!-- 顶部导航 -->
+        <header class="db-header">
+            <div class="db-title">🗄️ 数据库管理</div>
+            <div class="db-nav">
+                <a href="/admin" class="nav-btn">🔧 管理后台</a>
+                <a href="/" class="nav-btn">🚗 用户界面</a>
+                <a href="/auth/logout" class="nav-btn danger">退出登录</a>
+            </div>
+        </header>
+
+        <div class="db-main">
+            <!-- 用户管理区域 -->
+            <div class="section-card">
+                <div class="section-title">
+                    👥 用户管理
+                    <button class="add-btn" onclick="dbManager.showAddUserModal()">➕ 添加用户</button>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="adminCount">0</div>
+                        <div class="stat-label">管理员</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="userCount">0</div>
+                        <div class="stat-label">普通用户</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="passengerCount">0</div>
+                        <div class="stat-label">乘客</div>
+                    </div>
+                </div>
+
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <div class="search-icon">🔍</div>
+                    <input type="text" class="search-input" id="userSearchInput" placeholder="搜索用户名..." onkeyup="dbManager.filterUsers()">
+                </div>
+
+                <!-- 用户表格 -->
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>角色</th>
+                                <th>注册码</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <div class="empty-icon">👤</div>
+                                    <div>正在加载用户数据...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 注册码管理区域 -->
+            <div class="section-card">
+                <div class="section-title">
+                    🎫 注册码管理
+                    <button class="add-btn" onclick="dbManager.showAddCodeModal()">➕ 生成注册码</button>
+                </div>
+
+                <!-- 注册码统计 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCodes">0</div>
+                        <div class="stat-label">总注册码</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="unusedCodes">0</div>
+                        <div class="stat-label">未使用</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="usedCodes">0</div>
+                        <div class="stat-label">已使用</div>
+                    </div>
+                </div>
+
+                <!-- 搜索栏 -->
+                <div class="search-bar">
+                    <div class="search-icon">🔍</div>
+                    <input type="text" class="search-input" id="codeSearchInput" placeholder="搜索注册码..." onkeyup="dbManager.filterCodes()">
+                </div>
+
+                <!-- 注册码表格 -->
+                <div style="overflow-x: auto;">
+                    <table class="data-table" id="codesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>注册码</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codesTableBody">
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <div class="empty-icon">🎫</div>
+                                    <div>正在加载注册码数据...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑用户模态框 -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header" id="userModalTitle">添加用户</div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="userUsername" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" id="userPassword" placeholder="请输入密码" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">角色</label>
+                    <select class="form-select" id="userRole" required>
+                        <option value="passenger">乘客 (passenger)</option>
+                        <option value="user">普通用户 (user)</option>
+                        <option value="admin">管理员 (admin)</option>
+                        <option value="system_admin">系统管理员 (system_admin)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">注册码 (可选)</label>
+                    <input type="text" class="form-input" id="userRegCode" placeholder="注册码 (非乘客角色需要)">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="dbManager.closeUserModal()">取消</button>
+                    <button type="submit" class="modal-btn primary">
+                        <span id="userSubmitText">添加用户</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加注册码模态框 -->
+    <div class="modal" id="codeModal">
+        <div class="modal-content">
+            <div class="modal-header">生成注册码</div>
+            <form id="codeForm">
+                <div class="form-group">
+                    <label class="form-label">生成数量</label>
+                    <input type="number" class="form-input" id="codeCount" value="1" min="1" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">注册码长度</label>
+                    <select class="form-select" id="codeLength">
+                        <option value="8">8位</option>
+                        <option value="16" selected>16位</option>
+                        <option value="32">32位</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="dbManager.closeCodeModal()">取消</button>
+                    <button type="submit" class="modal-btn primary">生成注册码</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class DatabaseManager {
+            constructor() {
+                this.users = [];
+                this.codes = [];
+                this.filteredUsers = [];
+                this.filteredCodes = [];
+                this.editingUserId = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadData();
+            }
+
+            bindEvents() {
+                // 用户表单提交
+                document.getElementById('userForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveUser();
+                });
+
+                // 注册码表单提交
+                document.getElementById('codeForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.generateCodes();
+                });
+
+                // 角色变更时的注册码提示
+                document.getElementById('userRole').addEventListener('change', (e) => {
+                    const regCodeInput = document.getElementById('userRegCode');
+                    const regCodeLabel = regCodeInput.previousElementSibling;
+                    if (e.target.value === 'passenger') {
+                        regCodeLabel.textContent = '注册码 (乘客角色无需注册码)';
+                        regCodeInput.placeholder = '乘客角色无需注册码';
+                        regCodeInput.required = false;
+                    } else {
+                        regCodeLabel.textContent = '注册码 (必填)';
+                        regCodeInput.placeholder = '请输入有效的注册码';
+                        regCodeInput.required = true;
+                    }
+                });
+            }
+
+            async loadData() {
+                try {
+                    await Promise.all([
+                        this.loadUsers(),
+                        this.loadCodes()
+                    ]);
+                } catch (error) {
+                    console.error('❌ 加载数据失败:', error);
+                    this.showNotification('数据加载失败', 'error');
+                }
+            }
+
+            async loadUsers() {
+                try {
+                    const response = await fetch('/api/database/users');
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    if (response.status === 403) {
+                        this.showNotification('权限不足', 'error');
+                        return;
+                    }
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.users = data.users;
+                        this.filteredUsers = [...this.users];
+                        this.updateUsersTable();
+                        this.updateUserStats();
+                    } else {
+                        throw new Error(data.message || '获取用户数据失败');
+                    }
+                } catch (error) {
+                    console.error('❌ 加载用户失败:', error);
+                    this.showNotification('加载用户数据失败', 'error');
+                }
+            }
+
+            async loadCodes() {
+                try {
+                    const response = await fetch('/api/database/codes');
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    if (response.status === 403) {
+                        this.showNotification('权限不足', 'error');
+                        return;
+                    }
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.codes = data.codes;
+                        this.filteredCodes = [...this.codes];
+                        this.updateCodesTable();
+                        this.updateCodeStats();
+                    } else {
+                        throw new Error(data.message || '获取注册码数据失败');
+                    }
+                } catch (error) {
+                    console.error('❌ 加载注册码失败:', error);
+                    this.showNotification('加载注册码数据失败', 'error');
+                }
+            }
+
+            updateUsersTable() {
+                const tbody = document.getElementById('usersTableBody');
+
+                if (this.filteredUsers.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="empty-state">
+                                <div class="empty-icon">👤</div>
+                                <div>暂无用户数据</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = this.filteredUsers.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td><span class="role-badge role-${user.role}">${this.getRoleName(user.role)}</span></td>
+                        <td>${user.reg_code || '-'}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="dbManager.editUser(${user.id})">编辑</button>
+                            <button class="action-btn delete-btn" onclick="dbManager.deleteUser(${user.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updateCodesTable() {
+                const tbody = document.getElementById('codesTableBody');
+
+                if (this.filteredCodes.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <div class="empty-icon">🎫</div>
+                                <div>暂无注册码数据</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = this.filteredCodes.map(code => `
+                    <tr>
+                        <td>${code.id}</td>
+                        <td>${code.code}</td>
+                        <td><span class="code-status ${code.is_used ? 'code-used' : 'code-unused'}">${code.is_used ? '已使用' : '未使用'}</span></td>
+                        <td>
+                            <button class="action-btn delete-btn" onclick="dbManager.deleteCode(${code.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updateUserStats() {
+                const total = this.users.length;
+                const adminCount = this.users.filter(u => u.role === 'admin' || u.role === 'system_admin').length;
+                const userCount = this.users.filter(u => u.role === 'user').length;
+                const passengerCount = this.users.filter(u => u.role === 'passenger').length;
+
+                document.getElementById('totalUsers').textContent = total;
+                document.getElementById('adminCount').textContent = adminCount;
+                document.getElementById('userCount').textContent = userCount;
+                document.getElementById('passengerCount').textContent = passengerCount;
+            }
+
+            updateCodeStats() {
+                const total = this.codes.length;
+                const used = this.codes.filter(c => c.is_used).length;
+                const unused = total - used;
+
+                document.getElementById('totalCodes').textContent = total;
+                document.getElementById('usedCodes').textContent = used;
+                document.getElementById('unusedCodes').textContent = unused;
+            }
+
+            getRoleName(role) {
+                const roleNames = {
+                    'admin': '管理员',
+                    'user': '用户',
+                    'passenger': '乘客',
+                    'system_admin': '系统管理员'
+                };
+                return roleNames[role] || role;
+            }
+
+            filterUsers() {
+                const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+                this.filteredUsers = this.users.filter(user =>
+                    user.username.toLowerCase().includes(searchTerm) ||
+                    this.getRoleName(user.role).toLowerCase().includes(searchTerm) ||
+                    (user.reg_code && user.reg_code.toLowerCase().includes(searchTerm))
+                );
+                this.updateUsersTable();
+            }
+
+            filterCodes() {
+                const searchTerm = document.getElementById('codeSearchInput').value.toLowerCase();
+                this.filteredCodes = this.codes.filter(code =>
+                    code.code.toLowerCase().includes(searchTerm)
+                );
+                this.updateCodesTable();
+            }
+
+            showAddUserModal() {
+                this.editingUserId = null;
+                document.getElementById('userModalTitle').textContent = '添加用户';
+                document.getElementById('userSubmitText').textContent = '添加用户';
+                document.getElementById('userForm').reset();
+                document.getElementById('userModal').classList.add('show');
+            }
+
+            showAddCodeModal() {
+                document.getElementById('codeModal').classList.add('show');
+            }
+
+            closeUserModal() {
+                document.getElementById('userModal').classList.remove('show');
+            }
+
+            closeCodeModal() {
+                document.getElementById('codeModal').classList.remove('show');
+            }
+
+            editUser(userId) {
+                const user = this.users.find(u => u.id === userId);
+                if (!user) return;
+
+                this.editingUserId = userId;
+                document.getElementById('userModalTitle').textContent = '编辑用户';
+                document.getElementById('userSubmitText').textContent = '保存修改';
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userPassword').placeholder = '留空则不修改密码';
+                document.getElementById('userPassword').required = false;
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userRegCode').value = user.reg_code || '';
+
+                // 触发角色变更事件
+                document.getElementById('userRole').dispatchEvent(new Event('change'));
+
+                document.getElementById('userModal').classList.add('show');
+            }
+
+            async saveUser() {
+                const formData = {
+                    username: document.getElementById('userUsername').value,
+                    password: document.getElementById('userPassword').value,
+                    role: document.getElementById('userRole').value,
+                    reg_code: document.getElementById('userRegCode').value || null
+                };
+
+                try {
+                    let url, method;
+                    if (this.editingUserId) {
+                        url = `/api/database/users/${this.editingUserId}`;
+                        method = 'PUT';
+                    } else {
+                        url = '/api/database/users';
+                        method = 'POST';
+                    }
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.showNotification(data.message, 'success');
+                        this.closeUserModal();
+                        this.loadUsers();
+                    } else {
+                        this.showNotification(data.message || '操作失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ 保存用户失败:', error);
+                    this.showNotification('保存用户失败', 'error');
+                }
+            }
+
+            async deleteUser(userId) {
+                const user = this.users.find(u => u.id === userId);
+                if (!user) return;
+
+                if (!confirm(`确定要删除用户 "${user.username}" 吗？此操作不可恢复！`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/database/users/${userId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.showNotification(data.message, 'success');
+                        this.loadUsers();
+                    } else {
+                        this.showNotification(data.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ 删除用户失败:', error);
+                    this.showNotification('删除用户失败', 'error');
+                }
+            }
+
+            async generateCodes() {
+                const formData = {
+                    count: parseInt(document.getElementById('codeCount').value),
+                    length: parseInt(document.getElementById('codeLength').value)
+                };
+
+                try {
+                    const response = await fetch('/api/database/codes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.showNotification(`成功生成 ${formData.count} 个注册码`, 'success');
+                        this.closeCodeModal();
+                        this.loadCodes();
+                        document.getElementById('codeForm').reset();
+                        document.getElementById('codeCount').value = 1;
+                    } else {
+                        this.showNotification(data.message || '生成注册码失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ 生成注册码失败:', error);
+                    this.showNotification('生成注册码失败', 'error');
+                }
+            }
+
+            async deleteCode(codeId) {
+                const code = this.codes.find(c => c.id === codeId);
+                if (!code) return;
+
+                if (!confirm(`确定要删除注册码 "${code.code}" 吗？`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/database/codes/${codeId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.showNotification(data.message, 'success');
+                        this.loadCodes();
+                    } else {
+                        this.showNotification(data.message || '删除失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ 删除注册码失败:', error);
+                    this.showNotification('删除注册码失败', 'error');
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 3000);
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.dbManager = new DatabaseManager();
+            console.log('🗄️ 数据库管理系统已启动');
+        });
+    </script>
+</body>
+</html>
