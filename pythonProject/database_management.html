@@ -119,23 +119,43 @@
             box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
         }
 
+        .batch-btn {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #ffaa00, #ff8c00);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+        }
+
+        .batch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 170, 0, 0.3);
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            font-size: 13px;
         }
 
         .data-table th,
         .data-table td {
-            padding: 12px;
+            padding: 8px;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            word-wrap: break-word;
         }
 
         .data-table th {
             background: rgba(0, 212, 255, 0.1);
             color: #00d4ff;
             font-weight: 600;
+            font-size: 11px;
         }
 
         .data-table tr:hover {
@@ -172,6 +192,40 @@
             color: #ffaa00;
         }
 
+        .location-badge {
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .location-set {
+            background: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .location-unset {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }
+
+        .coordinates {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Courier New', monospace;
+        }
+
+        .home-name {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .action-btn {
             padding: 4px 8px;
             margin: 0 2px;
@@ -190,6 +244,11 @@
         .delete-btn {
             background: rgba(255, 107, 107, 0.3);
             color: #ff6b6b;
+        }
+
+        .location-btn {
+            background: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
         }
 
         .action-btn:hover {
@@ -221,7 +280,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 30px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             max-height: 80vh;
             overflow-y: auto;
         }
@@ -236,6 +295,12 @@
 
         .form-group {
             margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
         .form-label {
@@ -265,6 +330,46 @@
 
         .form-input::placeholder {
             color: rgba(255, 255, 255, 0.5);
+        }
+
+        .location-section {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .location-section h4 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .location-action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .get-location-btn {
+            background: rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+        }
+
+        .clear-location-btn {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
         }
 
         .modal-actions {
@@ -323,6 +428,15 @@
             font-size: 12px;
             color: rgba(255, 255, 255, 0.7);
             margin-top: 5px;
+        }
+
+        .location-stats {
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .location-stats .stat-number {
+            color: #00ff88;
         }
 
         .search-bar {
@@ -435,17 +549,21 @@
             }
 
             .data-table {
-                font-size: 13px;
+                font-size: 11px;
             }
 
             .data-table th,
             .data-table td {
-                padding: 8px;
+                padding: 6px;
             }
 
             .modal-content {
                 width: 95%;
                 padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -473,6 +591,23 @@
             background: linear-gradient(135deg, #5b86e5, #00d4ff);
             border-radius: 3px;
         }
+
+        .help-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+
+        .coordinate-preview {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 6px;
+            padding: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #00d4ff;
+            font-family: 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
@@ -492,7 +627,10 @@
             <div class="section-card">
                 <div class="section-title">
                     👥 用户管理
-                    <button class="add-btn" onclick="dbManager.showAddUserModal()">➕ 添加用户</button>
+                    <div>
+                        <button class="add-btn" onclick="dbManager.showAddUserModal()">➕ 添加用户</button>
+                        <button class="batch-btn" onclick="dbManager.showBatchLocationModal()">📍 批量位置</button>
+                    </div>
                 </div>
 
                 <!-- 统计卡片 -->
@@ -513,12 +651,20 @@
                         <div class="stat-number" id="passengerCount">0</div>
                         <div class="stat-label">乘客</div>
                     </div>
+                    <div class="stat-card location-stats">
+                        <div class="stat-number" id="locationCount">0</div>
+                        <div class="stat-label">已设置位置</div>
+                    </div>
+                    <div class="stat-card location-stats">
+                        <div class="stat-number" id="locationPercentage">0%</div>
+                        <div class="stat-label">位置覆盖率</div>
+                    </div>
                 </div>
 
                 <!-- 搜索栏 -->
                 <div class="search-bar">
                     <div class="search-icon">🔍</div>
-                    <input type="text" class="search-input" id="userSearchInput" placeholder="搜索用户名..." onkeyup="dbManager.filterUsers()">
+                    <input type="text" class="search-input" id="userSearchInput" placeholder="搜索用户名、角色、位置..." onkeyup="dbManager.filterUsers()">
                 </div>
 
                 <!-- 用户表格 -->
@@ -530,12 +676,13 @@
                                 <th>用户名</th>
                                 <th>角色</th>
                                 <th>注册码</th>
+                                <th>位置信息</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
                             <tr>
-                                <td colspan="5" class="empty-state">
+                                <td colspan="6" class="empty-state">
                                     <div class="empty-icon">👤</div>
                                     <div>正在加载用户数据...</div>
                                 </td>
@@ -604,32 +751,107 @@
         <div class="modal-content">
             <div class="modal-header" id="userModalTitle">添加用户</div>
             <form id="userForm">
-                <div class="form-group">
-                    <label class="form-label">用户名</label>
-                    <input type="text" class="form-input" id="userUsername" placeholder="请输入用户名" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-input" id="userUsername" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-input" id="userPassword" placeholder="请输入密码" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">密码</label>
-                    <input type="password" class="form-input" id="userPassword" placeholder="请输入密码" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">角色</label>
+                        <select class="form-select" id="userRole" required>
+                            <option value="passenger">乘客 (passenger)</option>
+                            <option value="user">普通用户 (user)</option>
+                            <option value="admin">管理员 (admin)</option>
+                            <option value="system_admin">系统管理员 (system_admin)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">注册码 (可选)</label>
+                        <input type="text" class="form-input" id="userRegCode" placeholder="注册码 (非乘客角色需要)">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">角色</label>
-                    <select class="form-select" id="userRole" required>
-                        <option value="passenger">乘客 (passenger)</option>
-                        <option value="user">普通用户 (user)</option>
-                        <option value="admin">管理员 (admin)</option>
-                        <option value="system_admin">系统管理员 (system_admin)</option>
-                    </select>
+
+                <!-- 位置信息区域 -->
+                <div class="location-section">
+                    <h4>📍 位置信息</h4>
+                    <div class="form-group">
+                        <label class="form-label">家的名字/地址</label>
+                        <input type="text" class="form-input" id="userHomeName" placeholder="例如：天津市南开区">
+                        <div class="help-text">可选：为用户设置一个易识别的位置名称</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">纬度 (Latitude)</label>
+                            <input type="number" class="form-input" id="userLatitude" placeholder="例如：39.123456" step="any" min="-90" max="90">
+                            <div class="help-text">范围：-90 到 90</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">经度 (Longitude)</label>
+                            <input type="number" class="form-input" id="userLongitude" placeholder="例如：117.123456" step="any" min="-180" max="180">
+                            <div class="help-text">范围：-180 到 180</div>
+                        </div>
+                    </div>
+                    <div class="coordinate-preview" id="coordinatePreview" style="display: none;">
+                        坐标预览：<span id="coordinateText"></span>
+                    </div>
+                    <div class="location-actions">
+                        <button type="button" class="location-action-btn get-location-btn" onclick="dbManager.getCurrentLocation()">📍 获取当前位置</button>
+                        <button type="button" class="location-action-btn clear-location-btn" onclick="dbManager.clearLocationInputs()">🧹 清空位置</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">注册码 (可选)</label>
-                    <input type="text" class="form-input" id="userRegCode" placeholder="注册码 (非乘客角色需要)">
-                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="modal-btn secondary" onclick="dbManager.closeUserModal()">取消</button>
                     <button type="submit" class="modal-btn primary">
                         <span id="userSubmitText">添加用户</span>
                     </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 批量位置更新模态框 -->
+    <div class="modal" id="batchLocationModal">
+        <div class="modal-content">
+            <div class="modal-header">📍 批量位置更新</div>
+            <div style="margin-bottom: 20px;">
+                <div class="help-text">为多个用户批量设置或更新位置信息。您可以选择用户并设置统一的位置，或为每个用户单独设置。</div>
+            </div>
+            <form id="batchLocationForm">
+                <div class="form-group">
+                    <label class="form-label">选择用户 (可多选)</label>
+                    <div id="userSelectionList" style="max-height: 200px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 10px;"></div>
+                </div>
+                <div class="location-section">
+                    <h4>📍 统一位置信息</h4>
+                    <div class="form-group">
+                        <label class="form-label">家的名字/地址</label>
+                        <input type="text" class="form-input" id="batchHomeName" placeholder="例如：天津市南开区">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">纬度</label>
+                            <input type="number" class="form-input" id="batchLatitude" placeholder="例如：39.123456" step="any" min="-90" max="90">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">经度</label>
+                            <input type="number" class="form-input" id="batchLongitude" placeholder="例如：117.123456" step="any" min="-180" max="180">
+                        </div>
+                    </div>
+                    <div class="location-actions">
+                        <button type="button" class="location-action-btn get-location-btn" onclick="dbManager.getBatchCurrentLocation()">📍 获取当前位置</button>
+                        <button type="button" class="location-action-btn clear-location-btn" onclick="dbManager.clearBatchLocationInputs()">🧹 清空位置</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn secondary" onclick="dbManager.closeBatchLocationModal()">取消</button>
+                    <button type="submit" class="modal-btn primary">批量更新位置</button>
                 </div>
             </form>
         </div>
@@ -668,6 +890,7 @@
                 this.filteredUsers = [];
                 this.filteredCodes = [];
                 this.editingUserId = null;
+                this.userStats = null;
                 this.init();
             }
 
@@ -689,6 +912,12 @@
                     this.generateCodes();
                 });
 
+                // 批量位置更新表单提交
+                document.getElementById('batchLocationForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.batchUpdateLocations();
+                });
+
                 // 角色变更时的注册码提示
                 document.getElementById('userRole').addEventListener('change', (e) => {
                     const regCodeInput = document.getElementById('userRegCode');
@@ -703,13 +932,18 @@
                         regCodeInput.required = true;
                     }
                 });
+
+                // 坐标输入实时预览
+                document.getElementById('userLatitude').addEventListener('input', () => this.updateCoordinatePreview());
+                document.getElementById('userLongitude').addEventListener('input', () => this.updateCoordinatePreview());
             }
 
             async loadData() {
                 try {
                     await Promise.all([
                         this.loadUsers(),
-                        this.loadCodes()
+                        this.loadCodes(),
+                        this.loadUserStats()
                     ]);
                 } catch (error) {
                     console.error('❌ 加载数据失败:', error);
@@ -769,13 +1003,28 @@
                 }
             }
 
+            async loadUserStats() {
+                try {
+                    const response = await fetch('/api/database/users/stats');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status === 'success') {
+                            this.userStats = data.stats;
+                            this.updateLocationStats();
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ 加载用户统计失败:', error);
+                }
+            }
+
             updateUsersTable() {
                 const tbody = document.getElementById('usersTableBody');
 
                 if (this.filteredUsers.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="empty-state">
+                            <td colspan="6" class="empty-state">
                                 <div class="empty-icon">👤</div>
                                 <div>暂无用户数据</div>
                             </td>
@@ -784,18 +1033,33 @@
                     return;
                 }
 
-                tbody.innerHTML = this.filteredUsers.map(user => `
-                    <tr>
-                        <td>${user.id}</td>
-                        <td>${user.username}</td>
-                        <td><span class="role-badge role-${user.role}">${this.getRoleName(user.role)}</span></td>
-                        <td>${user.reg_code || '-'}</td>
-                        <td>
-                            <button class="action-btn edit-btn" onclick="dbManager.editUser(${user.id})">编辑</button>
-                            <button class="action-btn delete-btn" onclick="dbManager.deleteUser(${user.id})">删除</button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = this.filteredUsers.map(user => {
+                    let locationInfo = '';
+                    if (user.has_location) {
+                        locationInfo = `
+                            <div class="location-badge location-set">已设置</div>
+                            <div class="home-name" title="${user.home_name || '未命名'}">${user.home_name || '未命名'}</div>
+                            <div class="coordinates">${user.coordinates}</div>
+                        `;
+                    } else {
+                        locationInfo = '<div class="location-badge location-unset">未设置</div>';
+                    }
+
+                    return `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td><span class="role-badge role-${user.role}">${this.getRoleName(user.role)}</span></td>
+                            <td>${user.reg_code || '-'}</td>
+                            <td>${locationInfo}</td>
+                            <td>
+                                <button class="action-btn edit-btn" onclick="dbManager.editUser(${user.id})" title="编辑用户">✏️</button>
+                                <button class="action-btn location-btn" onclick="dbManager.editUserLocation(${user.id})" title="编辑位置">📍</button>
+                                <button class="action-btn delete-btn" onclick="dbManager.deleteUser(${user.id})" title="删除用户">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
             updateCodesTable() {
@@ -830,11 +1094,22 @@
                 const adminCount = this.users.filter(u => u.role === 'admin' || u.role === 'system_admin').length;
                 const userCount = this.users.filter(u => u.role === 'user').length;
                 const passengerCount = this.users.filter(u => u.role === 'passenger').length;
+                const locationCount = this.users.filter(u => u.has_location).length;
+                const locationPercentage = total > 0 ? Math.round((locationCount / total) * 100) : 0;
 
                 document.getElementById('totalUsers').textContent = total;
                 document.getElementById('adminCount').textContent = adminCount;
                 document.getElementById('userCount').textContent = userCount;
                 document.getElementById('passengerCount').textContent = passengerCount;
+                document.getElementById('locationCount').textContent = locationCount;
+                document.getElementById('locationPercentage').textContent = locationPercentage + '%';
+            }
+
+            updateLocationStats() {
+                if (this.userStats) {
+                    document.getElementById('locationCount').textContent = this.userStats.users_with_location;
+                    document.getElementById('locationPercentage').textContent = this.userStats.location_percentage + '%';
+                }
             }
 
             updateCodeStats() {
@@ -862,7 +1137,8 @@
                 this.filteredUsers = this.users.filter(user =>
                     user.username.toLowerCase().includes(searchTerm) ||
                     this.getRoleName(user.role).toLowerCase().includes(searchTerm) ||
-                    (user.reg_code && user.reg_code.toLowerCase().includes(searchTerm))
+                    (user.reg_code && user.reg_code.toLowerCase().includes(searchTerm)) ||
+                    (user.home_name && user.home_name.toLowerCase().includes(searchTerm))
                 );
                 this.updateUsersTable();
             }
@@ -880,11 +1156,17 @@
                 document.getElementById('userModalTitle').textContent = '添加用户';
                 document.getElementById('userSubmitText').textContent = '添加用户';
                 document.getElementById('userForm').reset();
+                this.clearLocationInputs();
                 document.getElementById('userModal').classList.add('show');
             }
 
             showAddCodeModal() {
                 document.getElementById('codeModal').classList.add('show');
+            }
+
+            showBatchLocationModal() {
+                this.populateUserSelectionList();
+                document.getElementById('batchLocationModal').classList.add('show');
             }
 
             closeUserModal() {
@@ -893,6 +1175,10 @@
 
             closeCodeModal() {
                 document.getElementById('codeModal').classList.remove('show');
+            }
+
+            closeBatchLocationModal() {
+                document.getElementById('batchLocationModal').classList.remove('show');
             }
 
             editUser(userId) {
@@ -909,10 +1195,139 @@
                 document.getElementById('userRole').value = user.role;
                 document.getElementById('userRegCode').value = user.reg_code || '';
 
+                // 设置位置信息
+                document.getElementById('userHomeName').value = user.home_name || '';
+                document.getElementById('userLatitude').value = user.latitude || '';
+                document.getElementById('userLongitude').value = user.longitude || '';
+
+                this.updateCoordinatePreview();
+
                 // 触发角色变更事件
                 document.getElementById('userRole').dispatchEvent(new Event('change'));
 
                 document.getElementById('userModal').classList.add('show');
+            }
+
+            editUserLocation(userId) {
+                const user = this.users.find(u => u.id === userId);
+                if (!user) return;
+
+                this.editingUserId = userId;
+                document.getElementById('userModalTitle').textContent = `编辑位置 - ${user.username}`;
+                document.getElementById('userSubmitText').textContent = '保存位置';
+
+                // 只设置位置相关字段，其他字段设为只读状态
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userUsername').readOnly = true;
+                document.getElementById('userPassword').style.display = 'none';
+                document.getElementById('userPassword').previousElementSibling.style.display = 'none';
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userRole').disabled = true;
+                document.getElementById('userRegCode').value = user.reg_code || '';
+                document.getElementById('userRegCode').readOnly = true;
+
+                // 设置位置信息
+                document.getElementById('userHomeName').value = user.home_name || '';
+                document.getElementById('userLatitude').value = user.latitude || '';
+                document.getElementById('userLongitude').value = user.longitude || '';
+
+                this.updateCoordinatePreview();
+
+                document.getElementById('userModal').classList.add('show');
+            }
+
+            populateUserSelectionList() {
+                const container = document.getElementById('userSelectionList');
+                container.innerHTML = '';
+
+                this.users.forEach(user => {
+                    const checkbox = document.createElement('label');
+                    checkbox.style.cssText = `
+                        display: block;
+                        padding: 8px;
+                        margin: 4px 0;
+                        background: rgba(255,255,255,0.05);
+                        border-radius: 6px;
+                        cursor: pointer;
+                        transition: background 0.3s;
+                    `;
+                    checkbox.innerHTML = `
+                        <input type="checkbox" value="${user.id}" style="margin-right: 8px;">
+                        ${user.username} (${this.getRoleName(user.role)})
+                        ${user.has_location ? '📍' : '❌'}
+                    `;
+
+                    checkbox.addEventListener('mouseenter', () => {
+                        checkbox.style.background = 'rgba(255,255,255,0.1)';
+                    });
+                    checkbox.addEventListener('mouseleave', () => {
+                        checkbox.style.background = 'rgba(255,255,255,0.05)';
+                    });
+
+                    container.appendChild(checkbox);
+                });
+            }
+
+            updateCoordinatePreview() {
+                const lat = document.getElementById('userLatitude').value;
+                const lng = document.getElementById('userLongitude').value;
+                const preview = document.getElementById('coordinatePreview');
+                const text = document.getElementById('coordinateText');
+
+                if (lat && lng) {
+                    text.textContent = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+                    preview.style.display = 'block';
+                } else {
+                    preview.style.display = 'none';
+                }
+            }
+
+            getCurrentLocation() {
+                if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            document.getElementById('userLatitude').value = position.coords.latitude.toFixed(6);
+                            document.getElementById('userLongitude').value = position.coords.longitude.toFixed(6);
+                            this.updateCoordinatePreview();
+                            this.showNotification('已获取当前位置', 'success');
+                        },
+                        (error) => {
+                            this.showNotification('获取位置失败: ' + error.message, 'error');
+                        }
+                    );
+                } else {
+                    this.showNotification('浏览器不支持定位服务', 'error');
+                }
+            }
+
+            getBatchCurrentLocation() {
+                if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            document.getElementById('batchLatitude').value = position.coords.latitude.toFixed(6);
+                            document.getElementById('batchLongitude').value = position.coords.longitude.toFixed(6);
+                            this.showNotification('已获取当前位置', 'success');
+                        },
+                        (error) => {
+                            this.showNotification('获取位置失败: ' + error.message, 'error');
+                        }
+                    );
+                } else {
+                    this.showNotification('浏览器不支持定位服务', 'error');
+                }
+            }
+
+            clearLocationInputs() {
+                document.getElementById('userHomeName').value = '';
+                document.getElementById('userLatitude').value = '';
+                document.getElementById('userLongitude').value = '';
+                this.updateCoordinatePreview();
+            }
+
+            clearBatchLocationInputs() {
+                document.getElementById('batchHomeName').value = '';
+                document.getElementById('batchLatitude').value = '';
+                document.getElementById('batchLongitude').value = '';
             }
 
             async saveUser() {
@@ -920,7 +1335,10 @@
                     username: document.getElementById('userUsername').value,
                     password: document.getElementById('userPassword').value,
                     role: document.getElementById('userRole').value,
-                    reg_code: document.getElementById('userRegCode').value || null
+                    reg_code: document.getElementById('userRegCode').value || null,
+                    home_name: document.getElementById('userHomeName').value || null,
+                    latitude: document.getElementById('userLatitude').value || null,
+                    longitude: document.getElementById('userLongitude').value || null
                 };
 
                 try {
@@ -950,7 +1368,14 @@
                     if (data.status === 'success') {
                         this.showNotification(data.message, 'success');
                         this.closeUserModal();
-                        this.loadUsers();
+                        this.loadData();
+
+                        // 重置表单状态
+                        document.getElementById('userUsername').readOnly = false;
+                        document.getElementById('userPassword').style.display = 'block';
+                        document.getElementById('userPassword').previousElementSibling.style.display = 'block';
+                        document.getElementById('userRole').disabled = false;
+                        document.getElementById('userRegCode').readOnly = false;
                     } else {
                         this.showNotification(data.message || '操作失败', 'error');
                     }
@@ -981,13 +1406,61 @@
                     const data = await response.json();
                     if (data.status === 'success') {
                         this.showNotification(data.message, 'success');
-                        this.loadUsers();
+                        this.loadData();
                     } else {
                         this.showNotification(data.message || '删除失败', 'error');
                     }
                 } catch (error) {
                     console.error('❌ 删除用户失败:', error);
                     this.showNotification('删除用户失败', 'error');
+                }
+            }
+
+            async batchUpdateLocations() {
+                const checkboxes = document.querySelectorAll('#userSelectionList input[type="checkbox"]:checked');
+                const selectedUserIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+                if (selectedUserIds.length === 0) {
+                    this.showNotification('请选择要更新的用户', 'error');
+                    return;
+                }
+
+                const updates = selectedUserIds.map(userId => ({
+                    user_id: userId,
+                    home_name: document.getElementById('batchHomeName').value || null,
+                    latitude: document.getElementById('batchLatitude').value || null,
+                    longitude: document.getElementById('batchLongitude').value || null
+                }));
+
+                try {
+                    const response = await fetch('/api/database/users/batch_location', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ updates })
+                    });
+
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        this.showNotification(data.message, 'success');
+                        this.closeBatchLocationModal();
+                        this.loadData();
+
+                        if (data.errors && data.errors.length > 0) {
+                            console.log('批量更新错误:', data.errors);
+                        }
+                    } else {
+                        this.showNotification(data.message || '批量更新失败', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ 批量更新失败:', error);
+                    this.showNotification('批量更新失败', 'error');
                 }
             }
 
@@ -1076,7 +1549,7 @@
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', () => {
             window.dbManager = new DatabaseManager();
-            console.log('🗄️ 数据库管理系统已启动');
+            console.log('🗄️ 数据库管理系统已启动（支持位置信息）');
         });
     </script>
 </body>

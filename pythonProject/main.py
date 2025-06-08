@@ -890,6 +890,61 @@ def create_default_admin():
         logger.info('✅ 已更新管理员密码')
 
 
+def check_column_exists(table, column):
+    """检查数据库列是否存在"""
+    try:
+        # 使用原始SQL查询检查列是否存在
+        result = db.session.execute(f"PRAGMA table_info({table})")
+        columns = [row[1] for row in result.fetchall()]
+        return column in columns
+    except Exception as e:
+        logger.error(f"检查列 {column} 是否存在时出错: {e}")
+        return False
+
+
+def upgrade_database():
+    """自动升级数据库结构"""
+    try:
+        logger.info("🔍 检查数据库结构...")
+
+        # 需要添加的字段列表
+        fields_to_add = [
+            ('longitude', 'FLOAT'),
+            ('latitude', 'FLOAT'),
+            ('home_name', 'VARCHAR(100)')
+        ]
+
+        added_fields = []
+
+        for field_name, field_type in fields_to_add:
+            if not check_column_exists('user', field_name):
+                try:
+                    # 使用原始SQL添加列
+                    sql = f"ALTER TABLE user ADD COLUMN {field_name} {field_type}"
+                    db.session.execute(sql)
+                    db.session.commit()
+                    added_fields.append(field_name)
+                    logger.info(f"✅ 已添加数据库字段: {field_name} ({field_type})")
+                except Exception as e:
+                    logger.error(f"❌ 添加字段 {field_name} 失败: {e}")
+                    db.session.rollback()
+                    # 如果添加字段失败，继续尝试其他字段
+                    continue
+            else:
+                logger.info(f"ℹ️ 字段 {field_name} 已存在")
+
+        if added_fields:
+            logger.info(f"🎉 数据库升级完成！添加了 {len(added_fields)} 个新字段: {', '.join(added_fields)}")
+        else:
+            logger.info("ℹ️ 数据库已是最新版本")
+
+        return True
+
+    except Exception as e:
+        logger.error(f"❌ 数据库升级失败: {e}")
+        return False
+
+
 # ============== 错误处理器 ==============
 @app.errorhandler(401)
 def handle_unauthorized(error):
@@ -1825,251 +1880,6 @@ def database_full():
 
 # ============== 数据库管理API路由 ==============
 
-@app.route('/api/database/users', methods=['GET'])
-@login_required
-@require_admin()
-@log_api_request()
-def get_all_users():
-    """获取所有用户"""
-    try:
-        users = User.query.all()
-        users_data = []
-        for user in users:
-            users_data.append({
-                'id': user.id,
-                'username': user.username,
-                'role': user.role,
-                'reg_code': user.reg_code
-            })
-
-        return jsonify({
-            'status': 'success',
-            'users': users_data
-        })
-    except Exception as e:
-        logger.error(f"获取用户列表失败: {e}")
-        return jsonify({
-            'status': 'error',
-            'message': f'获取用户列表失败: {str(e)}'
-        }), 500
-
-
-@app.route('/api/database/users', methods=['POST'])
-@login_required
-@require_admin()
-@log_api_request()
-def add_user():
-    """添加用户"""
-    try:
-        data = request.get_json()
-        username = data.get('username', '').strip()
-        password = data.get('password', '').strip()
-        role = data.get('role', 'user')
-        reg_code = data.get('reg_code', '').strip() or None
-
-        # 验证输入
-        if not username or not password:
-            return jsonify({
-                'status': 'error',
-                'message': '用户名和密码不能为空'
-            }), 400
-
-        if role not in ['user', 'passenger', 'admin', 'system_admin']:
-            return jsonify({
-                'status': 'error',
-                'message': '无效的用户角色'
-            }), 400
-
-        # 检查用户名是否已存在
-        if User.query.filter_by(username=username).first():
-            return jsonify({
-                'status': 'error',
-                'message': '用户名已存在'
-            }), 400
-
-        # 验证注册码（非乘客角色需要注册码）
-        if role != 'passenger':
-            if not reg_code:
-                return jsonify({
-                    'status': 'error',
-                    'message': '非乘客角色需要提供注册码'
-                }), 400
-
-            # 检查注册码是否有效
-            code_row = RegistrationCode.query.filter_by(code=reg_code, is_used=False).first()
-            if not code_row:
-                return jsonify({
-                    'status': 'error',
-                    'message': '注册码无效或已被使用'
-                }), 400
-
-            # 标记注册码为已使用
-            code_row.mark_used()
-
-        # 创建用户
-        new_user = User(username=username, role=role, reg_code=reg_code)
-        new_user.set_password(password)
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        logger.info(f"管理员 {current_user.username} 添加了新用户: {username} (角色: {role})")
-
-        return jsonify({
-            'status': 'success',
-            'message': f'用户 {username} 添加成功'
-        })
-
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"添加用户失败: {e}")
-        return jsonify({
-            'status': 'error',
-            'message': f'添加用户失败: {str(e)}'
-        }), 500
-
-
-@app.route('/api/database/users/<int:user_id>', methods=['PUT'])
-@login_required
-@require_admin()
-@log_api_request()
-def update_user(user_id):
-    """更新用户信息"""
-    try:
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({
-                'status': 'error',
-                'message': '用户不存在'
-            }), 404
-
-        data = request.get_json()
-        username = data.get('username', '').strip()
-        password = data.get('password', '').strip()
-        role = data.get('role', user.role)
-        reg_code = data.get('reg_code', '').strip() or None
-
-        # 验证输入
-        if not username:
-            return jsonify({
-                'status': 'error',
-                'message': '用户名不能为空'
-            }), 400
-
-        if role not in ['user', 'passenger', 'admin', 'system_admin']:
-            return jsonify({
-                'status': 'error',
-                'message': '无效的用户角色'
-            }), 400
-
-        # 检查用户名是否与其他用户冲突
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user and existing_user.id != user_id:
-            return jsonify({
-                'status': 'error',
-                'message': '用户名已被其他用户使用'
-            }), 400
-
-        # 处理注册码逻辑
-        if role != 'passenger' and reg_code and reg_code != user.reg_code:
-            # 如果角色不是乘客且提供了新的注册码
-            code_row = RegistrationCode.query.filter_by(code=reg_code, is_used=False).first()
-            if not code_row:
-                return jsonify({
-                    'status': 'error',
-                    'message': '注册码无效或已被使用'
-                }), 400
-
-            # 释放旧注册码（如果有的话）
-            if user.reg_code:
-                old_code = RegistrationCode.query.filter_by(code=user.reg_code).first()
-                if old_code:
-                    old_code.is_used = False
-
-            # 标记新注册码为已使用
-            code_row.mark_used()
-
-        # 更新用户信息
-        user.username = username
-        if password:  # 只有提供密码时才更新
-            user.set_password(password)
-        user.role = role
-        user.reg_code = reg_code
-
-        db.session.commit()
-
-        logger.info(f"管理员 {current_user.username} 更新了用户: {username} (ID: {user_id})")
-
-        return jsonify({
-            'status': 'success',
-            'message': f'用户 {username} 更新成功'
-        })
-
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"更新用户失败: {e}")
-        return jsonify({
-            'status': 'error',
-            'message': f'更新用户失败: {str(e)}'
-        }), 500
-
-
-@app.route('/api/database/users/<int:user_id>', methods=['DELETE'])
-@login_required
-@require_admin()
-@log_api_request()
-def delete_user(user_id):
-    """删除用户"""
-    try:
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({
-                'status': 'error',
-                'message': '用户不存在'
-            }), 404
-
-        # 防止删除当前登录的用户
-        if user.id == current_user.id:
-            return jsonify({
-                'status': 'error',
-                'message': '不能删除当前登录的用户'
-            }), 400
-
-        # 防止删除最后一个管理员
-        if user.is_admin():
-            admin_count = User.query.filter_by(role='admin').count()
-            system_admin_count = User.query.filter_by(role='system_admin').count()
-            if admin_count + system_admin_count <= 1:
-                return jsonify({
-                    'status': 'error',
-                    'message': '不能删除最后一个管理员账户'
-                }), 400
-
-        username = user.username
-
-        # 释放注册码（如果有的话）
-        if user.reg_code:
-            code_row = RegistrationCode.query.filter_by(code=user.reg_code).first()
-            if code_row:
-                code_row.is_used = False
-
-        db.session.delete(user)
-        db.session.commit()
-
-        logger.info(f"管理员 {current_user.username} 删除了用户: {username} (ID: {user_id})")
-
-        return jsonify({
-            'status': 'success',
-            'message': f'用户 {username} 删除成功'
-        })
-
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"删除用户失败: {e}")
-        return jsonify({
-            'status': 'error',
-            'message': f'删除用户失败: {str(e)}'
-        }), 500
 
 
 @app.route('/api/database/codes', methods=['GET'])
@@ -2192,6 +2002,511 @@ def delete_code(code_id):
         }), 500
 
 
+# ============== 数据库管理API路由 - 修改版本 ==============
+
+@app.route('/api/database/users', methods=['GET'])
+@login_required
+@require_admin()
+@log_api_request()
+def get_all_users():
+    """获取所有用户"""
+    try:
+        users = User.query.all()
+        users_data = []
+        for user in users:
+            user_dict = {
+                'id': user.id,
+                'username': user.username,
+                'role': user.role,
+                'reg_code': user.reg_code,
+                'longitude': user.longitude,
+                'latitude': user.latitude,
+                'home_name': user.home_name,
+                'has_location': user.has_location(),
+                'coordinates': f"{user.latitude:.6f}, {user.longitude:.6f}" if user.has_location() else None
+            }
+            users_data.append(user_dict)
+
+        return jsonify({
+            'status': 'success',
+            'users': users_data
+        })
+    except Exception as e:
+        logger.error(f"获取用户列表失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'获取用户列表失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/users', methods=['POST'])
+@login_required
+@require_admin()
+@log_api_request()
+def add_user():
+    """添加用户"""
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', 'user')
+        reg_code = data.get('reg_code', '').strip() or None
+
+        # 新增位置信息字段
+        longitude = data.get('longitude')
+        latitude = data.get('latitude')
+        home_name = data.get('home_name', '').strip() or None
+
+        # 验证输入
+        if not username or not password:
+            return jsonify({
+                'status': 'error',
+                'message': '用户名和密码不能为空'
+            }), 400
+
+        if role not in ['user', 'passenger', 'admin', 'system_admin']:
+            return jsonify({
+                'status': 'error',
+                'message': '无效的用户角色'
+            }), 400
+
+        # 验证位置信息
+        if longitude is not None or latitude is not None:
+            try:
+                if longitude is not None:
+                    longitude = float(longitude)
+                    if not (-180 <= longitude <= 180):
+                        return jsonify({
+                            'status': 'error',
+                            'message': '经度必须在-180到180之间'
+                        }), 400
+
+                if latitude is not None:
+                    latitude = float(latitude)
+                    if not (-90 <= latitude <= 90):
+                        return jsonify({
+                            'status': 'error',
+                            'message': '纬度必须在-90到90之间'
+                        }), 400
+
+                # 如果设置了其中一个坐标，另一个也必须设置
+                if (longitude is None) != (latitude is None):
+                    return jsonify({
+                        'status': 'error',
+                        'message': '经度和纬度必须同时设置或同时为空'
+                    }), 400
+
+            except (ValueError, TypeError):
+                return jsonify({
+                    'status': 'error',
+                    'message': '经度和纬度必须是有效的数字'
+                }), 400
+
+        # 检查用户名是否已存在
+        if User.query.filter_by(username=username).first():
+            return jsonify({
+                'status': 'error',
+                'message': '用户名已存在'
+            }), 400
+
+        # 验证注册码（非乘客角色需要注册码）
+        if role != 'passenger':
+            if not reg_code:
+                return jsonify({
+                    'status': 'error',
+                    'message': '非乘客角色需要提供注册码'
+                }), 400
+
+            # 检查注册码是否有效
+            code_row = RegistrationCode.query.filter_by(code=reg_code, is_used=False).first()
+            if not code_row:
+                return jsonify({
+                    'status': 'error',
+                    'message': '注册码无效或已被使用'
+                }), 400
+
+            # 标记注册码为已使用
+            code_row.mark_used()
+
+        # 创建用户
+        new_user = User(
+            username=username,
+            role=role,
+            reg_code=reg_code,
+            longitude=longitude,
+            latitude=latitude,
+            home_name=home_name
+        )
+        new_user.set_password(password)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 添加了新用户: {username} (角色: {role})")
+
+        location_info = ""
+        if new_user.has_location():
+            location_info = f", 位置: {home_name or '未命名'} ({latitude:.6f}, {longitude:.6f})"
+
+        return jsonify({
+            'status': 'success',
+            'message': f'用户 {username} 添加成功{location_info}'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"添加用户失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'添加用户失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/users/<int:user_id>', methods=['PUT'])
+@login_required
+@require_admin()
+@log_api_request()
+def update_user(user_id):
+    """更新用户信息"""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': '用户不存在'
+            }), 404
+
+        data = request.get_json()
+
+        # 修复：安全处理可能为 None 的字段
+        username = data.get('username') or ''
+        username = username.strip() if username else ''
+
+        password = data.get('password') or ''
+        password = password.strip() if password else ''
+
+        role = data.get('role', user.role)
+
+        reg_code = data.get('reg_code') or ''
+        reg_code = reg_code.strip() if reg_code else None
+
+        # 新增位置信息字段
+        longitude = data.get('longitude')
+        latitude = data.get('latitude')
+
+        home_name = data.get('home_name') or ''
+        home_name = home_name.strip() if home_name else None
+
+        # 验证输入
+        if not username:
+            return jsonify({
+                'status': 'error',
+                'message': '用户名不能为空'
+            }), 400
+
+        if role not in ['user', 'passenger', 'admin', 'system_admin']:
+            return jsonify({
+                'status': 'error',
+                'message': '无效的用户角色'
+            }), 400
+
+        # 验证位置信息
+        if longitude is not None or latitude is not None:
+            try:
+                if longitude is not None:
+                    if longitude == '' or longitude == 'null':  # 处理空字符串和字符串'null'
+                        longitude = None
+                    else:
+                        longitude = float(longitude)
+                        if not (-180 <= longitude <= 180):
+                            return jsonify({
+                                'status': 'error',
+                                'message': '经度必须在-180到180之间'
+                            }), 400
+
+                if latitude is not None:
+                    if latitude == '' or latitude == 'null':  # 处理空字符串和字符串'null'
+                        latitude = None
+                    else:
+                        latitude = float(latitude)
+                        if not (-90 <= latitude <= 90):
+                            return jsonify({
+                                'status': 'error',
+                                'message': '纬度必须在-90到90之间'
+                            }), 400
+
+                # 如果设置了其中一个坐标，另一个也必须设置（除非都是空）
+                if (longitude is None) != (latitude is None):
+                    return jsonify({
+                        'status': 'error',
+                        'message': '经度和纬度必须同时设置或同时清空'
+                    }), 400
+
+            except (ValueError, TypeError):
+                return jsonify({
+                    'status': 'error',
+                    'message': '经度和纬度必须是有效的数字'
+                }), 400
+
+        # 检查用户名是否与其他用户冲突
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != user_id:
+            return jsonify({
+                'status': 'error',
+                'message': '用户名已被其他用户使用'
+            }), 400
+
+        # 处理注册码逻辑
+        if role != 'passenger' and reg_code and reg_code != user.reg_code:
+            # 如果角色不是乘客且提供了新的注册码
+            code_row = RegistrationCode.query.filter_by(code=reg_code, is_used=False).first()
+            if not code_row:
+                return jsonify({
+                    'status': 'error',
+                    'message': '注册码无效或已被使用'
+                }), 400
+
+            # 释放旧注册码（如果有的话）
+            if user.reg_code:
+                old_code = RegistrationCode.query.filter_by(code=user.reg_code).first()
+                if old_code:
+                    old_code.is_used = False
+
+            # 标记新注册码为已使用
+            code_row.mark_used()
+
+        # 更新用户信息
+        user.username = username
+        if password:  # 只有提供密码时才更新
+            user.set_password(password)
+        user.role = role
+        user.reg_code = reg_code
+
+        # 更新位置信息
+        user.longitude = longitude
+        user.latitude = latitude
+        user.home_name = home_name
+
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 更新了用户: {username} (ID: {user_id})")
+
+        location_info = ""
+        if user.has_location():
+            location_info = f", 位置: {home_name or '未命名'} ({latitude:.6f}, {longitude:.6f})"
+        elif longitude is None and latitude is None:
+            location_info = ", 位置信息已清除"
+
+        return jsonify({
+            'status': 'success',
+            'message': f'用户 {username} 更新成功{location_info}'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"更新用户失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'更新用户失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/users/<int:user_id>', methods=['DELETE'])
+@login_required
+@require_admin()
+@log_api_request()
+def delete_user(user_id):
+    """删除用户"""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': '用户不存在'
+            }), 404
+
+        # 防止删除当前登录的用户
+        if user.id == current_user.id:
+            return jsonify({
+                'status': 'error',
+                'message': '不能删除当前登录的用户'
+            }), 400
+
+        # 防止删除最后一个管理员
+        if user.is_admin():
+            admin_count = User.query.filter_by(role='admin').count()
+            system_admin_count = User.query.filter_by(role='system_admin').count()
+            if admin_count + system_admin_count <= 1:
+                return jsonify({
+                    'status': 'error',
+                    'message': '不能删除最后一个管理员账户'
+                }), 400
+
+        username = user.username
+        location_info = ""
+        if user.has_location():
+            location_info = f" (位置: {user.home_name or '未命名'})"
+
+        # 释放注册码（如果有的话）
+        if user.reg_code:
+            code_row = RegistrationCode.query.filter_by(code=user.reg_code).first()
+            if code_row:
+                code_row.is_used = False
+
+        db.session.delete(user)
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 删除了用户: {username} (ID: {user_id}){location_info}")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'用户 {username} 删除成功'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"删除用户失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'删除用户失败: {str(e)}'
+        }), 500
+
+
+# 新增：批量更新用户位置信息的API
+@app.route('/api/database/users/batch_location', methods=['POST'])
+@login_required
+@require_admin()
+@log_api_request()
+def batch_update_user_locations():
+    """批量更新用户位置信息"""
+    try:
+        data = request.get_json()
+        updates = data.get('updates', [])
+
+        if not updates:
+            return jsonify({
+                'status': 'error',
+                'message': '没有提供更新数据'
+            }), 400
+
+        success_count = 0
+        error_count = 0
+        errors = []
+
+        for update in updates:
+            try:
+                user_id = update.get('user_id')
+                longitude = update.get('longitude')
+                latitude = update.get('latitude')
+                home_name = update.get('home_name', '').strip() or None
+
+                user = User.query.get(user_id)
+                if not user:
+                    errors.append(f"用户ID {user_id} 不存在")
+                    error_count += 1
+                    continue
+
+                # 验证坐标
+                if longitude is not None and latitude is not None:
+                    longitude = float(longitude)
+                    latitude = float(latitude)
+
+                    if not (-180 <= longitude <= 180):
+                        errors.append(f"用户 {user.username} 的经度无效")
+                        error_count += 1
+                        continue
+
+                    if not (-90 <= latitude <= 90):
+                        errors.append(f"用户 {user.username} 的纬度无效")
+                        error_count += 1
+                        continue
+
+                # 更新位置信息
+                user.longitude = longitude
+                user.latitude = latitude
+                user.home_name = home_name
+
+                success_count += 1
+
+            except Exception as e:
+                errors.append(f"更新用户ID {update.get('user_id', 'unknown')} 失败: {str(e)}")
+                error_count += 1
+
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 批量更新了 {success_count} 个用户的位置信息")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'批量更新完成: 成功 {success_count} 个，失败 {error_count} 个',
+            'success_count': success_count,
+            'error_count': error_count,
+            'errors': errors
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"批量更新用户位置失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'批量更新失败: {str(e)}'
+        }), 500
+
+
+# 新增：获取用户统计信息（包含位置统计）
+@app.route('/api/database/users/stats', methods=['GET'])
+@login_required
+@require_admin()
+@log_api_request()
+def get_user_stats():
+    """获取用户统计信息"""
+    try:
+        total_users = User.query.count()
+        users_with_location = User.query.filter(
+            User.longitude.isnot(None),
+            User.latitude.isnot(None)
+        ).count()
+        users_without_location = total_users - users_with_location
+
+        # 按角色统计
+        role_stats = {}
+        for role in ['admin', 'system_admin', 'user', 'passenger']:
+            role_stats[role] = User.query.filter_by(role=role).count()
+
+        # 按位置状态和角色交叉统计
+        location_by_role = {}
+        for role in ['admin', 'system_admin', 'user', 'passenger']:
+            with_location = User.query.filter(
+                User.role == role,
+                User.longitude.isnot(None),
+                User.latitude.isnot(None)
+            ).count()
+            location_by_role[role] = {
+                'total': role_stats[role],
+                'with_location': with_location,
+                'without_location': role_stats[role] - with_location
+            }
+
+        return jsonify({
+            'status': 'success',
+            'stats': {
+                'total_users': total_users,
+                'users_with_location': users_with_location,
+                'users_without_location': users_without_location,
+                'location_percentage': round((users_with_location / total_users * 100) if total_users > 0 else 0, 1),
+                'role_stats': role_stats,
+                'location_by_role': location_by_role
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"获取用户统计失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'获取统计信息失败: {str(e)}'
+        }), 500
+
+
 # ============== 服务启动函数 ==============
 def start_navigation_module():
     global navigation_module
@@ -2289,18 +2604,31 @@ def main():
     logger.info("🚗 车载多模态交互系统启动中...")
     logger.info("=" * 50)
 
-    # 创建数据库表
+    # 创建数据库表和升级数据库结构
     with app.app_context():
-        db.create_all()
-        create_default_admin()
+        try:
+            # 首先创建基本表结构
+            db.create_all()
+            logger.info("✅ 数据库表结构已创建")
 
-        # 创建测试用户
-        if not User.query.filter_by(username='user').first():
-            test_user = User(username='user', role='user')
-            test_user.set_password('user123')
-            db.session.add(test_user)
-            db.session.commit()
-            logger.info('✅ 已创建测试用户 user / user123')
+            # 然后升级数据库（添加新字段）
+            upgrade_database()
+
+            # 最后创建默认管理员
+            create_default_admin()
+
+            # 创建测试用户
+            if not User.query.filter_by(username='user').first():
+                test_user = User(username='user', role='user')
+                test_user.set_password('user123')
+                db.session.add(test_user)
+                db.session.commit()
+                logger.info('✅ 已创建测试用户 user / user123')
+
+        except Exception as e:
+            logger.error(f"❌ 数据库初始化失败: {e}")
+            logger.info("请检查数据库文件权限或手动运行迁移脚本")
+            return
 
     # 启动导航模块
     if start_navigation_module():
