@@ -9,14 +9,15 @@ import psutil
 import io
 import secrets
 from datetime import datetime, timedelta
-from flask import Flask, render_template_string, jsonify, request, Response, send_file, session, redirect, url_for, \
-    flash
+from flask import Flask,render_template_string, jsonify, request, Response, send_file, session, redirect, url_for, \
+    flash, render_template
 from flask_socketio import SocketIO, emit
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from flask_login import login_user, logout_user, login_required, current_user
+from models import db, User, RegistrationCode          # ← 统一引用
 from werkzeug.security import generate_password_hash, check_password_hash
 import cv2
 import pyttsx3
+from auth import init_auth, login_manager  # 新增
 
 # 确保模块能被导入
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -46,25 +47,6 @@ except ImportError as e:
     logger.error(f"❌ 模块导入失败: {e}")
     print("请确保 voice_module.py、vision_module.py 和 navigation_module.py 在同一目录下")
     sys.exit(1)
-
-# ============== 数据库模型 ==============
-db = SQLAlchemy()
-
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(32), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
-    role = db.Column(db.String(16), default='user')  # 'user' | 'admin'
-
-    def set_password(self, raw_pwd):
-        self.password = generate_password_hash(raw_pwd)
-
-    def check_password(self, raw_pwd):
-        return check_password_hash(self.password, raw_pwd)
-
-    def is_admin(self):
-        return self.role == 'admin'
 
 
 # ============== 系统监控类 ==============
@@ -866,10 +848,11 @@ app.config.update(
 
 # 初始化扩展
 db.init_app(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
+init_auth(app)
+#login_manager = LoginManager()
+#login_manager.init_app(app)
+#login_manager.login_view = 'login'
+#login_manager.login_message_category = 'info'
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
@@ -883,9 +866,9 @@ vision_recognition = None
 navigation_module = None
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+#@login_manager.user_loader
+#def load_user(user_id):
+    #return User.query.get(int(user_id))
 
 
 def create_default_admin():
@@ -917,7 +900,7 @@ def handle_unauthorized(error):
         }), 401
 
     # 否则重定向到登录页面
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
 
 @app.errorhandler(403)
@@ -942,7 +925,7 @@ def check_authentication():
     # 跳过静态文件和登录相关的路由
     if (request.endpoint and
             (request.endpoint.startswith('static') or
-             request.endpoint in ['login', 'register', 'reset_password'])):
+             request.endpoint in ['auth.login', 'auth.register','auth.passenger_register', 'auth.reset_password'])):
         return
 
     # 如果是API请求且用户未认证
@@ -964,55 +947,7 @@ def check_authentication():
 
 
 # ============== 认证路由 ==============
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
 
-        if user and user.check_password(password):
-            login_user(user, remember=False, fresh=True)
-            session.permanent = False
-
-            # 根据用户角色重定向
-            if user.is_admin():
-                flash('管理员登录成功', 'success')
-                return redirect(url_for('admin_dashboard'))
-            else:
-                flash('用户登录成功', 'success')
-                return redirect(url_for('index'))
-        else:
-            flash('用户名或密码错误', 'error')
-
-    return render_template_string(LOGIN_TEMPLATE)
-
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username'].strip()
-        password = request.form['password']
-
-        if User.query.filter_by(username=username).first():
-            flash('用户名已存在', 'error')
-        else:
-            user = User(username=username, role='user')
-            user.set_password(password)
-            db.session.add(user)
-            db.session.commit()
-            flash('注册成功，请登录', 'success')
-            return redirect(url_for('login'))
-
-    return render_template_string(REGISTER_TEMPLATE)
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('已退出登录', 'info')
-    return redirect(url_for('login'))
 
 
 # ============== 主要路由 ==============
@@ -1027,7 +962,6 @@ def index():
         with open('web_interface.html', 'r', encoding='utf-8') as f:
             html_content = f.read()
 
-        # 使用 render_template_string 来渲染模板变量
         return render_template_string(html_content)
     except FileNotFoundError:
         return "<h1>错误：未找到 web_interface.html 文件</h1>"
@@ -1592,207 +1526,7 @@ def start_vision_recognition():
         return False
 
 
-# ============== HTML模板 ==============
-LOGIN_TEMPLATE = '''
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>车载系统登录</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #ffffff; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-        }
-        .login-container {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px);
-            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px; width: 400px; text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        .login-title {
-            font-size: 28px; font-weight: 700; margin-bottom: 30px;
-            background: linear-gradient(45deg, #00d4ff, #5b86e5);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .form-group { margin-bottom: 20px; text-align: left; }
-        .form-group label {
-            display: block; margin-bottom: 8px; color: #00d4ff; font-weight: 600;
-        }
-        .form-group input {
-            width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px;
-            color: white; font-size: 16px;
-        }
-        .form-group input:focus {
-            outline: none; border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-        }
-        .form-group input::placeholder { color: rgba(255, 255, 255, 0.5); }
-        .login-btn {
-            width: 100%; padding: 12px; background: linear-gradient(135deg, #5b86e5, #00d4ff);
-            border: none; border-radius: 10px; color: white; font-size: 16px;
-            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-        }
-        .login-btn:hover {
-            transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 212, 255, 0.4);
-        }
-        .links { margin-top: 20px; }
-        .links a {
-            color: #00d4ff; text-decoration: none; margin: 0 10px;
-        }
-        .links a:hover { text-decoration: underline; }
-        .flash-messages { margin-bottom: 20px; }
-        .flash-message {
-            padding: 10px; border-radius: 5px; margin-bottom: 10px;
-        }
-        .flash-success { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
-        .flash-error { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
-        .flash-info { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
-        .demo-accounts {
-            margin-top: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.6);
-            text-align: left; padding: 15px; background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <div class="login-title">🚗 车载智能系统</div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        <form method="POST">
-            <div class="form-group">
-                <label for="username">用户名</label>
-                <input type="text" id="username" name="username" required placeholder="请输入用户名">
-            </div>
-            <div class="form-group">
-                <label for="password">密码</label>
-                <input type="password" id="password" name="password" required placeholder="请输入密码">
-            </div>
-            <button type="submit" class="login-btn">登录</button>
-        </form>
-
-        <div class="links">
-            <a href="{{ url_for('register') }}">注册新账户</a>
-        </div>
-
-        <div class="demo-accounts">
-            <div>🧪 测试账户：</div>
-            <div>👤 普通用户: user / user123</div>
-            <div>🔧 管理员: admin / admin123</div>
-        </div>
-    </div>
-</body>
-</html>
-'''
-
-REGISTER_TEMPLATE = '''
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用户注册 - 车载系统</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #ffffff; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-        }
-        .register-container {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px);
-            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px; width: 400px; text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        .register-title {
-            font-size: 28px; font-weight: 700; margin-bottom: 30px;
-            background: linear-gradient(45deg, #00d4ff, #5b86e5);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .form-group { margin-bottom: 20px; text-align: left; }
-        .form-group label {
-            display: block; margin-bottom: 8px; color: #00d4ff; font-weight: 600;
-        }
-        .form-group input {
-            width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px;
-            color: white; font-size: 16px;
-        }
-        .form-group input:focus {
-            outline: none; border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-        }
-        .form-group input::placeholder { color: rgba(255, 255, 255, 0.5); }
-        .register-btn {
-            width: 100%; padding: 12px; background: linear-gradient(135deg, #5b86e5, #00d4ff);
-            border: none; border-radius: 10px; color: white; font-size: 16px;
-            font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-        }
-        .register-btn:hover {
-            transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 212, 255, 0.4);
-        }
-        .links { margin-top: 20px; }
-        .links a {
-            color: #00d4ff; text-decoration: none; margin: 0 10px;
-        }
-        .links a:hover { text-decoration: underline; }
-        .flash-messages { margin-bottom: 20px; }
-        .flash-message {
-            padding: 10px; border-radius: 5px; margin-bottom: 10px;
-        }
-        .flash-success { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
-        .flash-error { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
-        .flash-info { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
-    </style>
-</head>
-<body>
-    <div class="register-container">
-        <div class="register-title">📝 用户注册</div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
-                    {% for category, message in messages %}
-                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        <form method="POST">
-            <div class="form-group">
-                <label for="username">用户名</label>
-                <input type="text" id="username" name="username" required placeholder="请输入用户名" minlength="3">
-            </div>
-            <div class="form-group">
-                <label for="password">密码</label>
-                <input type="password" id="password" name="password" required placeholder="请输入密码" minlength="6">
-            </div>
-            <button type="submit" class="register-btn">注册</button>
-        </form>
-
-        <div class="links">
-            <a href="{{ url_for('login') }}">返回登录</a>
-        </div>
-    </div>
-</body>
-</html>
-'''
 
 
 # ============== 主函数 ==============
