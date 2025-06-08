@@ -18,6 +18,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import cv2
 import pyttsx3
 from auth import init_auth, login_manager  # 新增
+import secrets
+import string
+from werkzeug.security import generate_password_hash
 
 # 确保模块能被导入
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -938,7 +941,7 @@ def check_authentication():
 
     # 检查管理员权限
     if (request.path.startswith('/api/admin/') and
-            (not current_user.is_authenticated or not current_user.is_admin())):
+            (not current_user.is_authenticated or not (current_user.is_admin() or current_user.is_system_admin()))):
         return jsonify({
             'status': 'error',
             'message': '需要管理员权限',
@@ -1002,30 +1005,25 @@ def serve_map():
 # ============== API路由 ==============
 def log_api_request():
     """API请求记录装饰器"""
-
     def decorator(f):
         def decorated_function(*args, **kwargs):
             system_monitor.log_api_request()
             return f(*args, **kwargs)
-
         decorated_function.__name__ = f.__name__
         return decorated_function
-
     return decorator
 
 
 def require_admin():
     """管理员权限验证装饰器"""
-
     def decorator(f):
         def decorated_function(*args, **kwargs):
-            if not current_user.is_authenticated or not current_user.is_admin():
+            # 修改：允许 admin 和 system_admin 角色
+            if not current_user.is_authenticated or not (current_user.is_admin() or current_user.is_system_admin()):
                 return jsonify({'error': '需要管理员权限', 'code': 401}), 401
             return f(*args, **kwargs)
-
         decorated_function.__name__ = f.__name__
         return decorated_function
-
     return decorator
 
 
@@ -1435,6 +1433,763 @@ def handle_manual_command(data):
     command_text = data.get('text', '')
     if command_text:
         car_system.add_command(command_type, command_text, "手动操作")
+
+
+# ============== 数据库管理页面路由 ==============
+@app.route('/database')
+@login_required
+def database_management():
+    """数据库管理页面 - 专门为adminsystem用户设计"""
+    if not (current_user.is_admin() or current_user.is_system_admin()):
+        flash('权限不足，需要管理员权限', 'error')
+        return redirect(url_for('index'))
+
+    try:
+        # 专用欢迎页面
+        html_content = f'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库管理 - 车载系统</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body {{
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }}
+
+        .db-container {{
+            min-height: 100vh;
+        }}
+
+        .db-header {{
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }}
+
+        .db-title {{
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .db-nav {{
+            display: flex;
+            gap: 15px;
+        }}
+
+        .nav-btn {{
+            padding: 8px 16px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            color: #00d4ff;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }}
+
+        .nav-btn:hover {{
+            background: rgba(0, 212, 255, 0.3);
+            transform: translateY(-1px);
+        }}
+
+        .nav-btn.danger {{
+            background: rgba(255, 107, 107, 0.2);
+            border-color: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+        }}
+
+        .nav-btn.danger:hover {{
+            background: rgba(255, 107, 107, 0.3);
+        }}
+
+        .welcome-card {{
+            margin: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            text-align: center;
+        }}
+
+        .welcome-title {{
+            font-size: 28px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .welcome-text {{
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }}
+
+        .action-buttons {{
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }}
+
+        .action-btn {{
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #00d4ff, #5b86e5);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }}
+
+        .action-btn:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }}
+
+        .action-btn.secondary {{
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+
+        .stats-preview {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }}
+
+        .stat-card {{
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+
+        .stat-number {{
+            font-size: 32px;
+            font-weight: 700;
+            color: #00d4ff;
+            margin-bottom: 8px;
+        }}
+
+        .stat-label {{
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }}
+
+        .user-info-card {{
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }}
+
+        .user-info-title {{
+            color: #00ff88;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }}
+
+        @media (max-width: 768px) {{
+            .welcome-card {{
+                margin: 15px;
+                padding: 30px 20px;
+            }}
+
+            .action-buttons {{
+                flex-direction: column;
+                align-items: center;
+            }}
+
+            .action-btn {{
+                width: 100%;
+                max-width: 300px;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="db-container">
+        <header class="db-header">
+            <div class="db-title">🗄️ 数据库管理控制台</div>
+            <div class="db-nav">
+                <a href="/admin" class="nav-btn">🔧 管理后台</a>
+                <a href="/" class="nav-btn">🚗 用户界面</a>
+                <a href="{url_for('auth.logout')}" class="nav-btn danger">退出登录</a>
+            </div>
+        </header>
+
+        <div class="welcome-card">
+            <div class="user-info-card">
+                <div class="user-info-title">👋 欢迎，数据库管理员</div>
+                <div>当前登录用户：{current_user.username} ({current_user.role})</div>
+                <div>登录时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>
+            </div>
+
+            <div class="welcome-title">🎯 车载系统数据库管理中心</div>
+            <div class="welcome-text">
+                您已使用专用管理账户登录，可以执行以下数据库管理操作：<br>
+                • 用户管理：查看、添加、编辑、删除系统用户<br>
+                • 权限控制：修改用户角色和权限等级<br>
+                • 注册码管理：生成、查看、删除注册码<br>
+                • 数据统计：查看系统用户和注册码统计信息
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn" onclick="window.location.href='/database_full'">
+                    🗄️ 进入数据库管理
+                </button>
+                <button class="action-btn secondary" onclick="window.location.href='/admin'">
+                    🔧 系统监控后台
+                </button>
+            </div>
+
+            <div class="stats-preview" id="statsPreview">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">...</div>
+                    <div class="stat-label">总用户数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="adminUsers">...</div>
+                    <div class="stat-label">管理员</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCodes">...</div>
+                    <div class="stat-label">注册码总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="unusedCodes">...</div>
+                    <div class="stat-label">未使用注册码</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 加载统计数据
+        async function loadStats() {{
+            try {{
+                // 加载用户统计
+                const usersResponse = await fetch('/api/database/users');
+                if (usersResponse.ok) {{
+                    const usersData = await usersResponse.json();
+                    if (usersData.status === 'success') {{
+                        const users = usersData.users;
+                        document.getElementById('totalUsers').textContent = users.length;
+                        document.getElementById('adminUsers').textContent = 
+                            users.filter(u => u.role === 'admin' || u.role === 'system_admin').length;
+                    }}
+                }}
+
+                // 加载注册码统计
+                const codesResponse = await fetch('/api/database/codes');
+                if (codesResponse.ok) {{
+                    const codesData = await codesResponse.json();
+                    if (codesData.status === 'success') {{
+                        const codes = codesData.codes;
+                        document.getElementById('totalCodes').textContent = codes.length;
+                        document.getElementById('unusedCodes').textContent = 
+                            codes.filter(c => !c.is_used).length;
+                    }}
+                }}
+            }} catch (error) {{
+                console.error('加载统计数据失败:', error);
+            }}
+        }}
+
+        // 页面加载时获取统计数据
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>'''
+        return html_content
+    except Exception as e:
+        logger.error(f"加载数据库管理页面失败: {e}")
+        return f"<h1>错误：加载数据库管理页面失败 - {str(e)}</h1>"
+
+
+@app.route('/database_full')
+@login_required
+def database_full():
+    """完整的数据库管理界面"""
+    if not (current_user.is_admin() or current_user.is_system_admin()):
+        flash('权限不足，需要管理员权限', 'error')
+        return redirect(url_for('index'))
+
+    # 返回完整的数据库管理页面
+    try:
+        # 尝试从文件读取，如果文件不存在则显示提示
+        try:
+            with open('database_management.html', 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            return render_template_string(html_content)
+        except FileNotFoundError:
+            return render_template_string('''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库管理 - 车载系统</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            text-align: center;
+            padding: 50px;
+        }}
+        .error-container {{
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }}
+        .error-title {{
+            font-size: 24px;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }}
+        .help-text {{
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+        }}
+        .nav-btn {{
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+            text-decoration: none;
+            border-radius: 8px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-title">⚠️ 数据库管理页面文件缺失</div>
+        <p>请确保将 <code>database_management.html</code> 文件保存到项目根目录。</p>
+
+        <div class="help-text">
+            <strong>解决步骤：</strong><br>
+            1. 将提供的 database_management.html 文件保存到项目根目录<br>
+            2. 重启应用程序<br>
+            3. 重新访问此页面
+        </div>
+
+        <div>
+            <a href="/database" class="nav-btn">🔙 返回管理首页</a>
+            <a href="/admin" class="nav-btn">🔧 管理后台</a>
+            <a href="{url_for('auth.logout')}" class="nav-btn">🚪 退出登录</a>
+        </div>
+    </div>
+</body>
+</html>''')
+    except Exception as e:
+        logger.error(f"加载数据库管理页面失败: {e}")
+        return f"<h1>错误：{str(e)}</h1>"
+
+
+# ============== 数据库管理API路由 ==============
+
+@app.route('/api/database/users', methods=['GET'])
+@login_required
+@require_admin()
+@log_api_request()
+def get_all_users():
+    """获取所有用户"""
+    try:
+        users = User.query.all()
+        users_data = []
+        for user in users:
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'role': user.role,
+                'reg_code': user.reg_code
+            })
+
+        return jsonify({
+            'status': 'success',
+            'users': users_data
+        })
+    except Exception as e:
+        logger.error(f"获取用户列表失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'获取用户列表失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/users', methods=['POST'])
+@login_required
+@require_admin()
+@log_api_request()
+def add_user():
+    """添加用户"""
+    try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', 'user')
+        reg_code = data.get('reg_code', '').strip() or None
+
+        # 验证输入
+        if not username or not password:
+            return jsonify({
+                'status': 'error',
+                'message': '用户名和密码不能为空'
+            }), 400
+
+        if role not in ['user', 'passenger', 'admin', 'system_admin']:
+            return jsonify({
+                'status': 'error',
+                'message': '无效的用户角色'
+            }), 400
+
+        # 检查用户名是否已存在
+        if User.query.filter_by(username=username).first():
+            return jsonify({
+                'status': 'error',
+                'message': '用户名已存在'
+            }), 400
+
+        # 验证注册码（非乘客角色需要注册码）
+        if role != 'passenger':
+            if not reg_code:
+                return jsonify({
+                    'status': 'error',
+                    'message': '非乘客角色需要提供注册码'
+                }), 400
+
+            # 检查注册码是否有效
+            code_row = RegistrationCode.query.filter_by(code=reg_code, is_used=False).first()
+            if not code_row:
+                return jsonify({
+                    'status': 'error',
+                    'message': '注册码无效或已被使用'
+                }), 400
+
+            # 标记注册码为已使用
+            code_row.mark_used()
+
+        # 创建用户
+        new_user = User(username=username, role=role, reg_code=reg_code)
+        new_user.set_password(password)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 添加了新用户: {username} (角色: {role})")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'用户 {username} 添加成功'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"添加用户失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'添加用户失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/users/<int:user_id>', methods=['PUT'])
+@login_required
+@require_admin()
+@log_api_request()
+def update_user(user_id):
+    """更新用户信息"""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': '用户不存在'
+            }), 404
+
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', user.role)
+        reg_code = data.get('reg_code', '').strip() or None
+
+        # 验证输入
+        if not username:
+            return jsonify({
+                'status': 'error',
+                'message': '用户名不能为空'
+            }), 400
+
+        if role not in ['user', 'passenger', 'admin', 'system_admin']:
+            return jsonify({
+                'status': 'error',
+                'message': '无效的用户角色'
+            }), 400
+
+        # 检查用户名是否与其他用户冲突
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != user_id:
+            return jsonify({
+                'status': 'error',
+                'message': '用户名已被其他用户使用'
+            }), 400
+
+        # 处理注册码逻辑
+        if role != 'passenger' and reg_code and reg_code != user.reg_code:
+            # 如果角色不是乘客且提供了新的注册码
+            code_row = RegistrationCode.query.filter_by(code=reg_code, is_used=False).first()
+            if not code_row:
+                return jsonify({
+                    'status': 'error',
+                    'message': '注册码无效或已被使用'
+                }), 400
+
+            # 释放旧注册码（如果有的话）
+            if user.reg_code:
+                old_code = RegistrationCode.query.filter_by(code=user.reg_code).first()
+                if old_code:
+                    old_code.is_used = False
+
+            # 标记新注册码为已使用
+            code_row.mark_used()
+
+        # 更新用户信息
+        user.username = username
+        if password:  # 只有提供密码时才更新
+            user.set_password(password)
+        user.role = role
+        user.reg_code = reg_code
+
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 更新了用户: {username} (ID: {user_id})")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'用户 {username} 更新成功'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"更新用户失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'更新用户失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/users/<int:user_id>', methods=['DELETE'])
+@login_required
+@require_admin()
+@log_api_request()
+def delete_user(user_id):
+    """删除用户"""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': '用户不存在'
+            }), 404
+
+        # 防止删除当前登录的用户
+        if user.id == current_user.id:
+            return jsonify({
+                'status': 'error',
+                'message': '不能删除当前登录的用户'
+            }), 400
+
+        # 防止删除最后一个管理员
+        if user.is_admin():
+            admin_count = User.query.filter_by(role='admin').count()
+            system_admin_count = User.query.filter_by(role='system_admin').count()
+            if admin_count + system_admin_count <= 1:
+                return jsonify({
+                    'status': 'error',
+                    'message': '不能删除最后一个管理员账户'
+                }), 400
+
+        username = user.username
+
+        # 释放注册码（如果有的话）
+        if user.reg_code:
+            code_row = RegistrationCode.query.filter_by(code=user.reg_code).first()
+            if code_row:
+                code_row.is_used = False
+
+        db.session.delete(user)
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 删除了用户: {username} (ID: {user_id})")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'用户 {username} 删除成功'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"删除用户失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'删除用户失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/codes', methods=['GET'])
+@login_required
+@require_admin()
+@log_api_request()
+def get_all_codes():
+    """获取所有注册码"""
+    try:
+        codes = RegistrationCode.query.all()
+        codes_data = []
+        for code in codes:
+            codes_data.append({
+                'id': code.id,
+                'code': code.code,
+                'is_used': code.is_used
+            })
+
+        return jsonify({
+            'status': 'success',
+            'codes': codes_data
+        })
+    except Exception as e:
+        logger.error(f"获取注册码列表失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'获取注册码列表失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/codes', methods=['POST'])
+@login_required
+@require_admin()
+@log_api_request()
+def generate_codes():
+    """生成注册码"""
+    try:
+        data = request.get_json()
+        count = data.get('count', 1)
+        length = data.get('length', 16)
+
+        # 验证输入
+        if not isinstance(count, int) or count <= 0 or count > 100:
+            return jsonify({
+                'status': 'error',
+                'message': '生成数量必须是1-100之间的整数'
+            }), 400
+
+        if length not in [8, 16, 32]:
+            return jsonify({
+                'status': 'error',
+                'message': '注册码长度只能是8、16或32位'
+            }), 400
+
+        # 生成注册码
+        generated_codes = []
+        for i in range(count):
+            # 生成随机注册码
+            characters = string.ascii_letters + string.digits
+            code = ''.join(secrets.choice(characters) for _ in range(length))
+
+            # 确保注册码唯一
+            while RegistrationCode.query.filter_by(code=code).first():
+                code = ''.join(secrets.choice(characters) for _ in range(length))
+
+            new_code = RegistrationCode(code=code, is_used=False)
+            db.session.add(new_code)
+            generated_codes.append(code)
+
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 生成了 {count} 个注册码")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'成功生成 {count} 个注册码',
+            'codes': generated_codes
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"生成注册码失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'生成注册码失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/database/codes/<int:code_id>', methods=['DELETE'])
+@login_required
+@require_admin()
+@log_api_request()
+def delete_code(code_id):
+    """删除注册码"""
+    try:
+        code = RegistrationCode.query.get(code_id)
+        if not code:
+            return jsonify({
+                'status': 'error',
+                'message': '注册码不存在'
+            }), 404
+
+        code_str = code.code
+        db.session.delete(code)
+        db.session.commit()
+
+        logger.info(f"管理员 {current_user.username} 删除了注册码: {code_str}")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'注册码 {code_str} 删除成功'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"删除注册码失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'删除注册码失败: {str(e)}'
+        }), 500
 
 
 # ============== 服务启动函数 ==============

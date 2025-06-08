@@ -7,17 +7,19 @@ from flask_login import (
 from models import db, User
 
 # ─────────── LoginManager & Blueprint ───────────
-login_manager = LoginManager()                   # 只在此处创建
-login_manager.login_view = 'auth.login'          # 未登录跳转
+login_manager = LoginManager()  # 只在此处创建
+login_manager.login_view = 'auth.login'  # 未登录跳转
 login_manager.login_message_category = 'info'
 
-auth_bp = Blueprint('auth', __name__,             # url → /auth/...
+auth_bp = Blueprint('auth', __name__,  # url → /auth/...
                     template_folder='templates',
                     url_prefix='/auth')
+
 
 @login_manager.user_loader
 def load_user(uid):
     return User.query.get(int(uid))
+
 
 # ─────────── 默认管理员 ───────────
 def _ensure_admin():
@@ -27,14 +29,23 @@ def _ensure_admin():
         db.session.add(admin)
         db.session.commit()
         print('✅ 已创建默认管理员 admin / admin123')
+
     # 系统级管理员（只能内部创建）
     if not User.query.filter_by(username='sysadmin').first():
         sys_admin = User(username='sysadmin', role='system_admin')
         sys_admin.set_password('sysadmin123')
         db.session.add(sys_admin)
 
+    # 数据库管理专用账户 - 新增
+    if not User.query.filter_by(username='adminsystem').first():
+        db_admin = User(username='adminsystem', role='system_admin')
+        db_admin.set_password('adminsystem123')
+        db.session.add(db_admin)
+        print('✅ 已创建数据库管理账户 adminsystem / adminsystem123')
+
     db.session.commit()
-    print('✅ 已确保管理员账户: admin/admin123, sysadmin/sysadmin123')
+    print('✅ 已确保管理员账户: admin/admin123, sysadmin/sysadmin123, adminsystem/adminsystem123')
+
 
 # ─────────── 登录 / 注册 / 找回密码 ───────────
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -45,15 +56,22 @@ def login():
             login_user(u, remember=False, fresh=True)
             session.permanent = False
             flash('登录成功', 'success')
+
+            # 特殊处理：adminsystem用户直接跳转到数据库管理页面 - 新增
+            if u.username == 'adminsystem':
+                return redirect(url_for('database_management'))
+
+            # 普通用户按原逻辑处理
             return redirect(request.args.get('next') or url_for('index'))
         flash('用户名或密码错误', 'error')
     return render_template('login.html')
+
 
 @auth_bp.route('/passenger/register', methods=['GET', 'POST'])
 def passenger_register():
     if request.method == 'POST':
         uname = request.form['username'].strip()
-        pwd   = request.form['password']
+        pwd = request.form['password']
 
         # 1) 检查用户是否已存在
         if User.query.filter_by(username=uname).first():
@@ -72,17 +90,18 @@ def passenger_register():
     # GET 请求渲染页面
     return render_template('passenger_register.html')
 
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         uname = request.form['username'].strip()
-        pwd   = request.form['password']
-        regc  = request.form.get('reg_code','').strip()
+        pwd = request.form['password']
+        regc = request.form.get('reg_code', '').strip()
 
         if User.query.filter_by(username=uname).first():
             flash('用户名已存在', 'error')
         else:
-            from models import RegistrationCode                  # 防循环导入
+            from models import RegistrationCode  # 防循环导入
             code_row = RegistrationCode.query.filter_by(
                 code=regc, is_used=False).first()
             if not code_row:
@@ -97,10 +116,11 @@ def register():
                 return redirect(url_for('auth.login'))
     return render_template('register.html')
 
+
 @auth_bp.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
     if request.method == 'POST':
-        uname   = request.form['username'].strip()
+        uname = request.form['username'].strip()
         new_pwd = request.form['new_password']
         user = User.query.filter_by(username=uname).first()
         if not user:
@@ -112,12 +132,14 @@ def reset_password():
             return redirect(url_for('auth.login'))
     return render_template('reset_password.html')
 
+
 @auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
     flash('已退出登录', 'info')
     return redirect(url_for('auth.login'))
+
 
 # ─────────── Blueprint 初始化给主程序调用 ───────────
 def init_auth(app):
