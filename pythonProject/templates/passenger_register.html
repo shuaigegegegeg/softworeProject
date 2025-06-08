@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>乘客注册 · Car System</title>
+  {% include 'shared/auth_style.html' %}
+</head>
+<body>
+  <div class="card">
+    <h2 style="text-align:center;margin-bottom:22px">乘客注册</h2>
+
+    {% with m=get_flashed_messages(category_filter=['error','info']) %}
+      {% if m %}<div class="msg">{{ m[0] }}</div>{% endif %}
+    {% endwith %}
+
+    <form method="post">
+      <input name="username" placeholder="请输入乘客账号" required>
+      <input type="password" name="password" placeholder="请输入密码" required>
+      <button type="submit">注册</button>
+    </form>
+
+    <div style="text-align:center;margin-top:12px">
+      <a href="{{ url_for('auth.login') }}">已有乘客账号？登录</a> |
+      <a href="{{ url_for('auth.register') }}">驾驶员用户注册</a>
+    </div>
+  </div>
+</body>
+</html>
