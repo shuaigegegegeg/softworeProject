@@ -106,6 +106,11 @@ class CarSystem:
     def __init__(self, socketio_instance=None):
         self.socketio = socketio_instance
 
+        # 新增：当前用户缓存
+        self.current_user_id = None
+        self.current_user_home = None
+        self.app_context = None  # 用于存储应用上下文
+
         # 初始化pygame音频模块
         try:
             import pygame
@@ -204,6 +209,31 @@ class CarSystem:
         self._init_simple_tts()
 
         logger.info("🚗 车载智能系统已初始化")
+
+    def set_current_user(self, user_id, home_location=None):
+        """设置当前用户信息（在有Flask上下文时调用）"""
+        self.current_user_id = user_id
+        self.current_user_home = home_location
+        logger.info(f"🔧 已设置当前用户: {user_id}, 家位置: {'已设置' if home_location else '未设置'}")
+
+    def get_user_home_location(self):
+        """获取当前用户的家位置"""
+        if not self.current_user_id:
+            logger.warning("⚠️ 没有设置当前用户ID")
+            return None
+
+        try:
+            # 使用应用上下文查询数据库
+            if self.app_context:
+                with self.app_context:
+                    from models import User
+                    user = User.query.get(self.current_user_id)
+                    if user and user.has_location():
+                        return user.get_location()
+            return None
+        except Exception as e:
+            logger.error(f"❌ 获取用户家位置失败: {e}")
+            return None
 
     def _format_time(self, seconds):
         """将秒数格式化为 MM:SS"""
@@ -674,6 +704,7 @@ class CarSystem:
                 result = f"语音提醒: {original_text}"
                 self._send_update_to_clients(result)
                 return
+
             # 导航指令处理
             if any(keyword in text for keyword in ['导航', '去', '到', '前往']):
                 if hasattr(self, 'navigation_module') and self.navigation_module:
@@ -701,6 +732,90 @@ class CarSystem:
                         nav_status = self.navigation_module.get_navigation_status()
                         self.system_state['navigation'] = nav_status
                         result = "导航已停止"
+
+            # 修改后的回家导航指令处理
+            elif any(keyword in text for keyword in
+                     ['回家', '导航回家', '我要回家', '开车回家', '回到家', '导航到家', '带我回家', '开始回家',
+                      '出发回家', '回家去']):
+                if hasattr(self, 'navigation_module') and self.navigation_module:
+                    # 检查是否有当前用户信息
+                    if not self.current_user_id:
+                        result = "用户未登录，无法获取家位置"
+                        logger.error(f"❌ 用户未设置，无法回家")
+                    else:
+                        # 获取当前用户的家位置
+                        home_location = self.get_user_home_location()
+
+                        if home_location:
+                            logger.info(f"🏠 用户家位置信息: {home_location}")
+
+                            # 使用导航模块导航到家
+                            if self.navigation_module.start_navigation_to_coordinates(
+                                    home_location['latitude'],
+                                    home_location['longitude'],
+                                    home_location['home_name'] or "我的家"
+                            ):
+                                nav_status = self.navigation_module.get_navigation_status()
+                                self.system_state['navigation'] = nav_status
+                                result = f"开始导航回家：{home_location['home_name'] or '我的家'}"
+                                logger.info(f"✅ 开始导航回家: {home_location['home_name']}")
+                            else:
+                                result = "无法规划回家路线"
+                                logger.error(f"❌ 无法规划回家路线")
+                        else:
+                            result = "您还没有设置家位置，请先设置家位置"
+                            logger.warning(f"⚠️ 用户未设置家位置")
+                else:
+                    result = "导航模块未启用，无法回家"
+                    logger.error(f"❌ 导航模块未启用")
+
+            # 修改后的设置家位置指令处理
+            elif any(keyword in text for keyword in
+                     ['这里是我家', '设置为我家', '这是我家', '记住这里是我家', '保存为我家']):
+
+                logger.info(f"🏠 收到设置家位置指令: {original_text}")
+
+                if hasattr(self, 'navigation_module') and self.navigation_module:
+                    # 检查是否正在导航或有目的地信息
+                    nav_status = self.navigation_module.get_navigation_status()
+                    logger.info(f"🧭 当前导航状态: {nav_status}")
+
+                    if nav_status and nav_status.get('destination'):
+                        destination = nav_status['destination']
+                        logger.info(f"🎯 获取到目的地信息: {destination}")
+
+                        # 准备位置数据
+                        location_data = {
+                            'home_name': destination.get('name') or destination.get('address', '我的家'),
+                            'latitude': destination.get('lat'),
+                            'longitude': destination.get('lng')
+                        }
+                        logger.info(f"📍 准备保存的位置数据: {location_data}")
+
+                        # 验证位置数据
+                        if location_data['latitude'] is not None and location_data['longitude'] is not None:
+                            logger.info(f"✅ 位置数据有效，发送设置请求")
+
+                            # 通过WebSocket发送设置家位置的事件到前端
+                            if self.socketio:
+                                self.socketio.emit('set_home_location_request', {
+                                    'location_data': location_data,
+                                    'message': f"是否将 {location_data['home_name']} 设置为您的家？"
+                                })
+                                logger.info(f"📡 已发送家位置设置请求到前端")
+
+                            result = f"正在为您设置家位置：{location_data['home_name']}"
+                            logger.info(f"✅ 设置家位置指令处理完成: {location_data['home_name']}")
+                        else:
+                            result = "无法获取有效的位置信息，请确保正在导航"
+                            logger.error(
+                                f"❌ 位置数据无效: lat={location_data['latitude']}, lng={location_data['longitude']}")
+                    else:
+                        result = "请先导航到目的地，再设置为家位置"
+                        logger.warning(f"⚠️ 没有目的地信息，当前导航状态: {nav_status}")
+                else:
+                    result = "导航模块未启用，无法设置家位置"
+                    logger.error(f"❌ 导航模块未启用")
 
             # 音乐控制 - 使用实际播放方法
             elif any(keyword in text for keyword in ['暂停', '停止播放', '暂停音乐', '停止音乐']):
@@ -902,48 +1017,6 @@ def check_column_exists(table, column):
         return False
 
 
-def upgrade_database():
-    """自动升级数据库结构"""
-    try:
-        logger.info("🔍 检查数据库结构...")
-
-        # 需要添加的字段列表
-        fields_to_add = [
-            ('longitude', 'FLOAT'),
-            ('latitude', 'FLOAT'),
-            ('home_name', 'VARCHAR(100)')
-        ]
-
-        added_fields = []
-
-        for field_name, field_type in fields_to_add:
-            if not check_column_exists('user', field_name):
-                try:
-                    # 使用原始SQL添加列
-                    sql = f"ALTER TABLE user ADD COLUMN {field_name} {field_type}"
-                    db.session.execute(sql)
-                    db.session.commit()
-                    added_fields.append(field_name)
-                    logger.info(f"✅ 已添加数据库字段: {field_name} ({field_type})")
-                except Exception as e:
-                    logger.error(f"❌ 添加字段 {field_name} 失败: {e}")
-                    db.session.rollback()
-                    # 如果添加字段失败，继续尝试其他字段
-                    continue
-            else:
-                logger.info(f"ℹ️ 字段 {field_name} 已存在")
-
-        if added_fields:
-            logger.info(f"🎉 数据库升级完成！添加了 {len(added_fields)} 个新字段: {', '.join(added_fields)}")
-        else:
-            logger.info("ℹ️ 数据库已是最新版本")
-
-        return True
-
-    except Exception as e:
-        logger.error(f"❌ 数据库升级失败: {e}")
-        return False
-
 
 # ============== 错误处理器 ==============
 @app.errorhandler(401)
@@ -1015,6 +1088,18 @@ def index():
     """用户主页面"""
     if current_user.is_admin():
         return redirect(url_for('admin_dashboard'))
+
+    # 更新当前用户信息到 car_system
+    try:
+        if current_user.is_authenticated:
+            home_location = None
+            if current_user.has_location():
+                home_location = current_user.get_location()
+
+            car_system.set_current_user(current_user.id, home_location)
+            car_system.app_context = app.app_context()
+    except Exception as e:
+        logger.error(f"❌ 更新用户信息到car_system失败: {e}")
 
     try:
         with open('web_interface.html', 'r', encoding='utf-8') as f:
@@ -1098,10 +1183,25 @@ def get_user_info():
     })
 
 
+# 5. 在相关的路由中更新用户信息到 car_system
 @app.route('/api/system_state')
 @login_required
 @log_api_request()
 def get_system_state():
+    # 更新当前用户信息到 car_system
+    try:
+        if current_user.is_authenticated:
+            home_location = None
+            if current_user.has_location():
+                home_location = current_user.get_location()
+
+            car_system.set_current_user(current_user.id, home_location)
+
+            # 设置应用上下文供后续使用
+            car_system.app_context = app.app_context()
+    except Exception as e:
+        logger.error(f"❌ 更新用户信息到car_system失败: {e}")
+
     return jsonify(car_system.get_system_state())
 
 
@@ -2507,6 +2607,131 @@ def get_user_stats():
         }), 500
 
 
+@app.route('/api/set_home_location', methods=['POST'])
+@login_required
+@log_api_request()
+def set_home_location():
+    """设置当前用户的家位置"""
+    try:
+        # 从请求中获取位置数据，或从车载系统中获取
+        data = request.get_json()
+
+        # 如果请求中没有数据，尝试从车载系统获取
+        if not data and hasattr(car_system, 'pending_home_location'):
+            data = car_system.pending_home_location
+            # 清除临时数据
+            delattr(car_system, 'pending_home_location')
+
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': '没有可用的位置数据'
+            }), 400
+
+        home_name = data.get('home_name', '').strip()
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+
+        # 验证数据
+        if not home_name:
+            return jsonify({
+                'status': 'error',
+                'message': '家的名称不能为空'
+            }), 400
+
+        if latitude is None or longitude is None:
+            return jsonify({
+                'status': 'error',
+                'message': '经纬度信息不完整'
+            }), 400
+
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+
+            # 验证经纬度范围
+            if not (-90 <= latitude <= 90):
+                return jsonify({
+                    'status': 'error',
+                    'message': '纬度必须在-90到90之间'
+                }), 400
+
+            if not (-180 <= longitude <= 180):
+                return jsonify({
+                    'status': 'error',
+                    'message': '经度必须在-180到180之间'
+                }), 400
+
+        except (ValueError, TypeError):
+            return jsonify({
+                'status': 'error',
+                'message': '经纬度必须是有效的数字'
+            }), 400
+
+        # 更新当前用户的位置信息
+        user = current_user
+        user.home_name = home_name
+        user.latitude = latitude
+        user.longitude = longitude
+
+        # 保存到数据库
+        db.session.commit()
+
+        # 更新 car_system 中的用户信息
+        home_location = user.get_location()
+        car_system.set_current_user(user.id, home_location)
+
+        logger.info(f"✅ 用户 {user.username} 的家位置已更新: {home_name} ({latitude:.6f}, {longitude:.6f})")
+
+        return jsonify({
+            'status': 'success',
+            'message': f'家位置已成功设置为: {home_name}',
+            'data': {
+                'home_name': home_name,
+                'latitude': latitude,
+                'longitude': longitude,
+                'coordinates': f"{latitude:.6f}, {longitude:.6f}"
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"❌ 设置家位置失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'设置家位置失败: {str(e)}'
+        }), 500
+
+
+@app.route('/api/get_home_location', methods=['GET'])
+@login_required
+@log_api_request()
+def get_home_location():
+    """获取当前用户的家位置"""
+    try:
+        user = current_user
+
+        if user.has_location():
+            location_data = user.get_location()
+            return jsonify({
+                'status': 'success',
+                'data': location_data
+            })
+        else:
+            return jsonify({
+                'status': 'success',
+                'data': None,
+                'message': '用户尚未设置家位置'
+            })
+
+    except Exception as e:
+        logger.error(f"❌ 获取家位置失败: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'获取家位置失败: {str(e)}'
+        }), 500
+
+
 # ============== 服务启动函数 ==============
 def start_navigation_module():
     global navigation_module
@@ -2610,9 +2835,6 @@ def main():
             # 首先创建基本表结构
             db.create_all()
             logger.info("✅ 数据库表结构已创建")
-
-            # 然后升级数据库（添加新字段）
-            upgrade_database()
 
             # 最后创建默认管理员
             create_default_admin()

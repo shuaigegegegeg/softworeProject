@@ -273,6 +273,19 @@ class VoiceRecognition:
             ],
             'navigation_stop': [r'停止导航', r'结束导航', r'取消导航', r'关闭导航'],
 
+            # 新增：回家导航指令
+            'navigation_home': [
+                r'回家', r'导航回家', r'我要回家', r'开车回家', r'回到家',
+                r'导航到家', r'带我回家', r'开始回家', r'出发回家', r'回家去'
+            ],
+
+            # 新增：设置家位置指令
+            'set_home_location': [
+                r'这里是我家', r'设置为我家', r'这是我家', r'记住这里是我家',
+                r'保存为我家', r'这就是我家', r'设为家', r'记为我家',
+                r'保存这个位置为我家', r'将这里设为我家'
+            ],
+
             # 音乐控制
             'music_play': [r'播放音乐', r'开始播放', r'播放', r'开始音乐', r'打开音乐'],
             'music_pause': [r'暂停音乐', r'暂停播放', r'暂停', r'停止音乐', r'停止播放'],
@@ -302,6 +315,8 @@ class VoiceRecognition:
             'navigation_trigger': ('正在为您启动导航', '导航已启动'),
             'navigation_complete': ('正在为您规划路线', '路线规划完成'),
             'navigation_stop': ('正在为您停止导航', '导航已停止'),
+            'navigation_home': ('正在为您导航回家', '回家路线规划完成'),
+            'set_home_location': ('正在为您设置家位置', '家位置设置完成'),
             'music_play': ('正在为您播放音乐', '音乐播放已开始'),
             'music_pause': ('正在为您暂停音乐', '音乐已暂停'),
             'music_next': ('正在为您切换下一首', '已切换到下一首'),

@@ -891,6 +891,57 @@ class NavigationModule:
             'map_available': self.map_html_path is not None and os.path.exists(self.map_html_path)
         }
 
+    def start_navigation_to_coordinates(self, latitude, longitude, location_name="目的地"):
+        """直接通过坐标开始导航"""
+        try:
+            print(f"🧭 开始导航到坐标: {location_name} ({latitude}, {longitude})")
+
+            # 验证坐标
+            if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+                print(f"❌ 坐标无效: lat={latitude}, lng={longitude}")
+                return False
+
+            # 获取路线
+            route_data = self.get_route(latitude, longitude)
+            if not route_data:
+                print(f"❌ 无法规划到 {location_name} 的路线")
+                return False
+
+            # 保存导航信息
+            self.destination = {
+                'lat': latitude,
+                'lng': longitude,
+                'name': location_name,
+                'address': location_name
+            }
+            self.route_data = route_data
+            self.is_navigating = True
+
+            # 生成导航地图
+            self.generate_navigation_map()
+
+            # 获取路线信息
+            if 'routes' in route_data and route_data['routes']:
+                route = route_data['routes'][0]
+                distance_km = route['distance'] / 1000
+                duration_min = route['duration']
+
+                print(f"📊 路线详情:")
+                print(f"   距离: {distance_km:.1f}公里")
+                print(f"   时间: {duration_min:.0f}分钟")
+
+                result_msg = f"导航开始: 到{location_name}，距离{distance_km:.1f}公里，预计{duration_min:.0f}分钟"
+                print(f"✅ {result_msg}")
+
+                return True
+            else:
+                print(f"❌ 路线数据异常")
+                return False
+
+        except Exception as e:
+            print(f"❌ 坐标导航启动失败: {e}")
+            return False
+
     def cleanup(self):
         """清理临时文件"""
         try:
