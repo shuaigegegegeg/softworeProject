@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 # 导入自定义模块
 try:
     from voice_module import VoiceRecognition
-    from vision_module import VisionRecognition
+    #from vision_module import VisionRecognition
     from navigation_module import NavigationModule
 
     logger.info("✅ 模块导入成功")

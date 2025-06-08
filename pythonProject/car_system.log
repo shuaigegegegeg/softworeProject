@@ -5933,3 +5933,461 @@
 2025-06-08 11:32:50,964 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
 2025-06-08 11:32:52,212 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
 2025-06-08 11:32:54,736 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:57:49,715 - INFO - ✅ 模块导入成功
+2025-06-08 11:57:50,668 - INFO - 🎵 音频模块初始化成功
+2025-06-08 11:57:53,175 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 11:57:53,176 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 11:57:53,176 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 11:57:53,176 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 11:57:53,176 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 11:57:53,176 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 11:57:53,176 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 11:57:53,176 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 11:57:53,213 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 11:57:53,213 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 11:57:53,425 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 11:57:53,425 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 11:57:53,428 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 11:57:53,429 - INFO - ==================================================
+2025-06-08 11:57:53,528 - INFO - ✅ 已更新管理员密码
+2025-06-08 11:57:53,529 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 11:57:53,622 - INFO - ✅ 导航模块启动成功
+2025-06-08 11:57:53,622 - INFO - ✅ 导航模块已启动
+2025-06-08 11:57:53,622 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 11:57:56,078 - INFO - ✅ 语音识别线程已启动
+2025-06-08 11:57:56,078 - INFO - ✅ 语音识别模块已启动
+2025-06-08 11:57:56,078 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 11:57:59,805 - INFO - ✅ 视觉识别线程已启动
+2025-06-08 11:57:59,806 - INFO - ✅ 视觉识别模块已启动
+2025-06-08 11:57:59,806 - INFO - ==================================================
+2025-06-08 11:57:59,806 - INFO - 🌐 Web服务器启动中...
+2025-06-08 11:57:59,806 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 11:57:59,806 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 11:57:59,806 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 11:57:59,806 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 11:57:59,806 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 11:57:59,806 - INFO - ==================================================
+2025-06-08 11:57:59,806 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 11:57:59,863 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 11:57:59,863 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 11:58:02,663 - INFO - 127.0.0.1 - - [08/Jun/2025 11:58:02] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 11:58:02,686 - INFO - 127.0.0.1 - - [08/Jun/2025 11:58:02] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 11:58:04,670 - INFO - 127.0.0.1 - - [08/Jun/2025 11:58:04] "GET /auth/register HTTP/1.1" 200 -
+2025-06-08 11:58:05,843 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:07,339 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:07,991 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:07,992 - INFO - 📝 收到指令: [视觉] 握拳
+2025-06-08 11:58:07,992 - INFO - ✅ 视觉指令已添加到系统: 握拳
+2025-06-08 11:58:07,992 - INFO - 📝 收到指令: [视觉] 暂停音乐
+2025-06-08 11:58:07,992 - INFO - ✅ 视觉指令已添加到系统: 暂停音乐
+2025-06-08 11:58:07,993 - INFO - 🎵 执行暂停指令: 暂停音乐
+2025-06-08 11:58:07,993 - ERROR - ❌ 音乐暂停失败
+2025-06-08 11:58:08,013 - INFO - 127.0.0.1 - - [08/Jun/2025 11:58:08] "GET /auth/passenger/register HTTP/1.1" 200 -
+2025-06-08 11:58:08,014 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:09,911 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:10,115 - INFO - 127.0.0.1 - - [08/Jun/2025 11:58:10] "GET /auth/login HTTP/1.1" 200 -
+2025-06-08 11:58:11,457 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:12,298 - INFO - 127.0.0.1 - - [08/Jun/2025 11:58:12] "GET /auth/register HTTP/1.1" 200 -
+2025-06-08 11:58:12,359 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:12,359 - INFO - 📝 收到指令: [视觉] 分心
+2025-06-08 11:58:12,360 - INFO - ✅ 视觉指令已添加到系统: 分心
+2025-06-08 11:58:12,360 - INFO - 📝 收到指令: [视觉] 请集中精神注意路况
+2025-06-08 11:58:12,360 - INFO - ✅ 视觉指令已添加到系统: 请集中精神注意路况
+2025-06-08 11:58:12,360 - INFO - 🔊 收到语音提醒指令: 请集中精神注意路况
+2025-06-08 11:58:12,360 - INFO - 🔊 播放语音提醒: 请集中精神注意路况
+2025-06-08 11:58:12,999 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:16,940 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:16,941 - INFO - 📝 收到指令: [视觉] 正常
+2025-06-08 11:58:16,941 - INFO - ✅ 视觉指令已添加到系统: 正常
+2025-06-08 11:58:17,826 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:19,114 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:20,423 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:22,748 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:23,773 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:25,807 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:26,513 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:28,439 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:30,159 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:30,750 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:31,800 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:34,481 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:35,455 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:37,096 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:37,891 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:41,509 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:42,561 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 11:58:42,935 - INFO - HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/chat/completions "HTTP/1.1 200 OK"
+2025-06-08 12:03:07,065 - ERROR - ❌ 模块导入失败: No module named 'mediapipe'
+2025-06-08 12:03:17,606 - ERROR - ❌ 模块导入失败: No module named 'mediapipe'
+2025-06-08 12:06:34,908 - ERROR - ❌ 模块导入失败: cannot import name 'VisionRecognition' from 'vision_module' (C:\Users\86182\Desktop\software item\gitcode\softworeProject\pythonProject\vision_module.py)
+2025-06-08 12:06:56,488 - INFO - ✅ 模块导入成功
+2025-06-08 12:06:57,481 - INFO - 🎵 音频模块初始化成功
+2025-06-08 12:07:00,050 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 12:07:00,050 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 12:07:00,050 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 12:07:00,050 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 12:07:00,050 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 12:07:00,050 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 12:07:00,050 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 12:07:00,050 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 12:07:00,102 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 12:07:00,102 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 12:07:00,338 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 12:07:00,338 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 12:07:00,340 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 12:07:00,340 - INFO - ==================================================
+2025-06-08 12:07:00,430 - INFO - ✅ 已更新管理员密码
+2025-06-08 12:07:00,430 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 12:07:00,488 - INFO - ✅ 导航模块启动成功
+2025-06-08 12:07:00,489 - INFO - ✅ 导航模块已启动
+2025-06-08 12:07:00,489 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 12:07:02,919 - INFO - ✅ 语音识别线程已启动
+2025-06-08 12:07:02,919 - INFO - ✅ 语音识别模块已启动
+2025-06-08 12:07:02,919 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 12:07:02,919 - ERROR - ❌ 视觉识别启动失败: name 'VisionRecognition' is not defined
+2025-06-08 12:07:02,919 - WARNING - ⚠️ 视觉识别模块启动失败，将继续运行其他功能
+2025-06-08 12:07:02,920 - INFO - ==================================================
+2025-06-08 12:07:02,920 - INFO - 🌐 Web服务器启动中...
+2025-06-08 12:07:02,920 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 12:07:02,920 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 12:07:02,920 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 12:07:02,920 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 12:07:02,920 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 12:07:02,920 - INFO - ==================================================
+2025-06-08 12:07:02,920 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 12:07:02,957 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 12:07:02,957 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 12:07:07,526 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:07] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:07:07,543 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:07] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 12:07:09,572 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:09] "GET /auth/register HTTP/1.1" 200 -
+2025-06-08 12:07:11,690 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:11] "GET /auth/passenger/register HTTP/1.1" 200 -
+2025-06-08 12:07:13,064 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:13] "GET /auth/register HTTP/1.1" 200 -
+2025-06-08 12:07:14,510 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:14] "GET /auth/login HTTP/1.1" 200 -
+2025-06-08 12:07:16,018 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:16] "GET /auth/reset_password HTTP/1.1" 200 -
+2025-06-08 12:07:17,368 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:17] "GET /auth/login HTTP/1.1" 200 -
+2025-06-08 12:07:28,071 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:28] "GET /auth/register HTTP/1.1" 200 -
+2025-06-08 12:07:29,613 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:29] "GET /auth/passenger/register HTTP/1.1" 200 -
+2025-06-08 12:07:54,923 - ERROR - Exception on /auth/passenger/register [POST]
+Traceback (most recent call last):
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\Desktop\software item\gitcode\softworeProject\pythonProject\auth.py", line 70, in passenger_register
+    return redirect(url_for('auth.passenger_login'))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\helpers.py", line 232, in url_for
+    return current_app.url_for(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.passenger_login'. Did you mean 'auth.passenger_register' instead?
+2025-06-08 12:07:54,930 - INFO - 127.0.0.1 - - [08/Jun/2025 12:07:54] "[35m[1mPOST /auth/passenger/register HTTP/1.1[0m" 500 -
+2025-06-08 12:09:26,099 - INFO - ✅ 模块导入成功
+2025-06-08 12:09:27,031 - INFO - 🎵 音频模块初始化成功
+2025-06-08 12:09:29,426 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 12:09:29,427 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 12:09:29,427 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 12:09:29,427 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 12:09:29,427 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 12:09:29,427 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 12:09:29,427 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 12:09:29,427 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 12:09:29,471 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 12:09:29,471 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 12:09:29,636 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 12:09:29,636 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 12:09:29,638 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 12:09:29,638 - INFO - ==================================================
+2025-06-08 12:09:29,730 - INFO - ✅ 已更新管理员密码
+2025-06-08 12:09:29,730 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 12:09:29,827 - INFO - ✅ 导航模块启动成功
+2025-06-08 12:09:29,827 - INFO - ✅ 导航模块已启动
+2025-06-08 12:09:29,827 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 12:09:32,250 - INFO - ✅ 语音识别线程已启动
+2025-06-08 12:09:32,250 - INFO - ✅ 语音识别模块已启动
+2025-06-08 12:09:32,250 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 12:09:32,250 - ERROR - ❌ 视觉识别启动失败: name 'VisionRecognition' is not defined
+2025-06-08 12:09:32,250 - WARNING - ⚠️ 视觉识别模块启动失败，将继续运行其他功能
+2025-06-08 12:09:32,250 - INFO - ==================================================
+2025-06-08 12:09:32,250 - INFO - 🌐 Web服务器启动中...
+2025-06-08 12:09:32,250 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 12:09:32,250 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 12:09:32,251 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 12:09:32,251 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 12:09:32,251 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 12:09:32,251 - INFO - ==================================================
+2025-06-08 12:09:32,251 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 12:09:32,270 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 12:09:32,270 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 12:09:34,580 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:34] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:09:34,597 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:34] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 12:09:42,041 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:42] "[32mPOST /auth/login?next=/ HTTP/1.1[0m" 302 -
+2025-06-08 12:09:42,060 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:42] "GET / HTTP/1.1" 200 -
+2025-06-08 12:09:42,145 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:42] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:09:42,146 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:42] "GET /api/system_state HTTP/1.1" 200 -
+2025-06-08 12:09:42,156 - INFO - 🔗 客户端连接成功: WCG2-pqd2a_4me3uAAAB
+2025-06-08 12:09:42,282 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:42] "GET /map HTTP/1.1" 200 -
+2025-06-08 12:09:45,153 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:45] "GET /map?1749355785140 HTTP/1.1" 200 -
+2025-06-08 12:09:51,868 - INFO - 127.0.0.1 - - [08/Jun/2025 12:09:51] "[33mGET /logout HTTP/1.1[0m" 404 -
+2025-06-08 12:09:51,938 - INFO - 🔌 客户端断开连接: WCG2-pqd2a_4me3uAAAB
+2025-06-08 12:10:33,779 - INFO - 📝 收到指令: [语音] 导航到玩
+2025-06-08 12:10:33,779 - INFO - ✅ 语音指令已添加到系统: 导航到玩
+2025-06-08 12:10:56,220 - INFO - 127.0.0.1 - - [08/Jun/2025 12:10:56] "GET /auth/login HTTP/1.1" 200 -
+2025-06-08 12:11:04,516 - INFO - 127.0.0.1 - - [08/Jun/2025 12:11:04] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-08 12:11:04,531 - INFO - 127.0.0.1 - - [08/Jun/2025 12:11:04] "GET / HTTP/1.1" 200 -
+2025-06-08 12:11:04,565 - INFO - 127.0.0.1 - - [08/Jun/2025 12:11:04] "GET /map HTTP/1.1" 200 -
+2025-06-08 12:11:04,613 - INFO - 127.0.0.1 - - [08/Jun/2025 12:11:04] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:11:04,615 - INFO - 127.0.0.1 - - [08/Jun/2025 12:11:04] "GET /api/system_state HTTP/1.1" 200 -
+2025-06-08 12:11:04,619 - INFO - 🔗 客户端连接成功: -Oxr48jYmOI5cuOQAAAD
+2025-06-08 12:11:07,628 - INFO - 127.0.0.1 - - [08/Jun/2025 12:11:07] "GET /map?1749355867613 HTTP/1.1" 200 -
+2025-06-08 12:12:53,502 - INFO - ✅ 模块导入成功
+2025-06-08 12:12:54,407 - INFO - 🎵 音频模块初始化成功
+2025-06-08 12:12:56,818 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 12:12:56,818 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 12:12:56,818 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 12:12:56,818 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 12:12:56,818 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 12:12:56,818 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 12:12:56,818 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 12:12:56,818 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 12:12:56,860 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 12:12:56,860 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 12:12:57,018 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 12:12:57,018 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 12:12:57,020 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 12:12:57,020 - INFO - ==================================================
+2025-06-08 12:12:57,120 - INFO - ✅ 已更新管理员密码
+2025-06-08 12:12:57,121 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 12:12:57,181 - INFO - ✅ 导航模块启动成功
+2025-06-08 12:12:57,181 - INFO - ✅ 导航模块已启动
+2025-06-08 12:12:57,181 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 12:12:59,574 - INFO - ✅ 语音识别线程已启动
+2025-06-08 12:12:59,574 - INFO - ✅ 语音识别模块已启动
+2025-06-08 12:12:59,574 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 12:12:59,574 - ERROR - ❌ 视觉识别启动失败: name 'VisionRecognition' is not defined
+2025-06-08 12:12:59,574 - WARNING - ⚠️ 视觉识别模块启动失败，将继续运行其他功能
+2025-06-08 12:12:59,574 - INFO - ==================================================
+2025-06-08 12:12:59,574 - INFO - 🌐 Web服务器启动中...
+2025-06-08 12:12:59,574 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 12:12:59,574 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 12:12:59,574 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 12:12:59,574 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 12:12:59,574 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 12:12:59,574 - INFO - ==================================================
+2025-06-08 12:12:59,574 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 12:12:59,613 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 12:12:59,613 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 12:13:01,204 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:01] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:13:01,218 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:01] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 12:13:07,804 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:07] "[32mPOST /auth/login?next=/ HTTP/1.1[0m" 302 -
+2025-06-08 12:13:07,819 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:07] "GET / HTTP/1.1" 200 -
+2025-06-08 12:13:07,881 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:07] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:13:07,881 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:07] "GET /api/system_state HTTP/1.1" 200 -
+2025-06-08 12:13:07,887 - INFO - 🔗 客户端连接成功: kz4q8Sa85Lx45eU4AAAB
+2025-06-08 12:13:08,010 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:08] "GET /map HTTP/1.1" 200 -
+2025-06-08 12:13:10,893 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:10] "GET /map?1749355990875 HTTP/1.1" 200 -
+2025-06-08 12:13:35,897 - INFO - 📝 收到指令: [语音] 导航到这了
+2025-06-08 12:13:35,898 - INFO - ✅ 语音指令已添加到系统: 导航到这了
+2025-06-08 12:13:38,606 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:38] "GET /map?t=1749356018600&r=niq7pg HTTP/1.1" 200 -
+2025-06-08 12:13:39,106 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:39] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:13:39,108 - INFO - 127.0.0.1 - - [08/Jun/2025 12:13:39] "GET /map?t=1749356019102&r=hixpd6j HTTP/1.1" 200 -
+2025-06-08 12:14:19,998 - INFO - 127.0.0.1 - - [08/Jun/2025 12:14:19] "[33mGET /logout HTTP/1.1[0m" 404 -
+2025-06-08 12:14:20,065 - INFO - 🔌 客户端断开连接: kz4q8Sa85Lx45eU4AAAB
+2025-06-08 12:15:43,529 - INFO - ✅ 模块导入成功
+2025-06-08 12:15:44,422 - INFO - 🎵 音频模块初始化成功
+2025-06-08 12:15:46,824 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 12:15:46,824 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 12:15:46,825 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 12:15:46,825 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 12:15:46,825 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 12:15:46,825 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 12:15:46,825 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 12:15:46,825 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 12:15:46,860 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 12:15:46,860 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 12:15:47,023 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 12:15:47,023 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 12:15:47,026 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 12:15:47,026 - INFO - ==================================================
+2025-06-08 12:15:47,129 - INFO - ✅ 已更新管理员密码
+2025-06-08 12:15:47,130 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 12:15:47,240 - INFO - ✅ 导航模块启动成功
+2025-06-08 12:15:47,240 - INFO - ✅ 导航模块已启动
+2025-06-08 12:15:47,240 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 12:15:49,650 - INFO - ✅ 语音识别线程已启动
+2025-06-08 12:15:49,650 - INFO - ✅ 语音识别模块已启动
+2025-06-08 12:15:49,650 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 12:15:49,650 - ERROR - ❌ 视觉识别启动失败: name 'VisionRecognition' is not defined
+2025-06-08 12:15:49,650 - WARNING - ⚠️ 视觉识别模块启动失败，将继续运行其他功能
+2025-06-08 12:15:49,650 - INFO - ==================================================
+2025-06-08 12:15:49,650 - INFO - 🌐 Web服务器启动中...
+2025-06-08 12:15:49,650 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 12:15:49,650 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 12:15:49,650 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 12:15:49,650 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 12:15:49,650 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 12:15:49,650 - INFO - ==================================================
+2025-06-08 12:15:49,650 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 12:15:49,662 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 12:15:49,662 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 12:15:55,988 - INFO - 127.0.0.1 - - [08/Jun/2025 12:15:55] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:15:56,006 - INFO - 127.0.0.1 - - [08/Jun/2025 12:15:56] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 12:16:02,524 - INFO - 127.0.0.1 - - [08/Jun/2025 12:16:02] "[32mPOST /auth/login?next=/ HTTP/1.1[0m" 302 -
+2025-06-08 12:16:02,549 - INFO - 127.0.0.1 - - [08/Jun/2025 12:16:02] "GET / HTTP/1.1" 200 -
+2025-06-08 12:16:02,634 - INFO - 127.0.0.1 - - [08/Jun/2025 12:16:02] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:16:02,635 - INFO - 127.0.0.1 - - [08/Jun/2025 12:16:02] "GET /api/system_state HTTP/1.1" 200 -
+2025-06-08 12:16:02,643 - INFO - 🔗 客户端连接成功: 8AP1eo5ulOgwS4EvAAAB
+2025-06-08 12:16:02,759 - INFO - 127.0.0.1 - - [08/Jun/2025 12:16:02] "GET /map HTTP/1.1" 200 -
+2025-06-08 12:16:04,568 - INFO - 127.0.0.1 - - [08/Jun/2025 12:16:04] "[33mGET /logout HTTP/1.1[0m" 404 -
+2025-06-08 12:16:04,630 - INFO - 🔌 客户端断开连接: 8AP1eo5ulOgwS4EvAAAB
+2025-06-08 12:21:47,070 - INFO - ✅ 模块导入成功
+2025-06-08 12:21:48,060 - INFO - 🎵 音频模块初始化成功
+2025-06-08 12:21:50,419 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 12:21:50,419 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 12:21:50,419 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 12:21:50,419 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 12:21:50,419 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 12:21:50,419 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 12:21:50,419 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 12:21:50,419 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 12:21:50,455 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 12:21:50,455 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 12:21:50,613 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 12:21:50,613 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 12:21:50,616 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 12:21:50,616 - INFO - ==================================================
+2025-06-08 12:21:50,713 - INFO - ✅ 已更新管理员密码
+2025-06-08 12:21:50,713 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 12:21:50,777 - INFO - ✅ 导航模块启动成功
+2025-06-08 12:21:50,777 - INFO - ✅ 导航模块已启动
+2025-06-08 12:21:50,777 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 12:21:53,189 - INFO - ✅ 语音识别线程已启动
+2025-06-08 12:21:53,189 - INFO - ✅ 语音识别模块已启动
+2025-06-08 12:21:53,189 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 12:21:53,189 - ERROR - ❌ 视觉识别启动失败: name 'VisionRecognition' is not defined
+2025-06-08 12:21:53,189 - WARNING - ⚠️ 视觉识别模块启动失败，将继续运行其他功能
+2025-06-08 12:21:53,189 - INFO - ==================================================
+2025-06-08 12:21:53,189 - INFO - 🌐 Web服务器启动中...
+2025-06-08 12:21:53,189 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 12:21:53,189 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 12:21:53,189 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 12:21:53,189 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 12:21:53,189 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 12:21:53,189 - INFO - ==================================================
+2025-06-08 12:21:53,190 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 12:21:53,206 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 12:21:53,206 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 12:21:54,976 - INFO - 127.0.0.1 - - [08/Jun/2025 12:21:54] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:21:54,991 - INFO - 127.0.0.1 - - [08/Jun/2025 12:21:54] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 12:22:01,497 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:01] "[32mPOST /auth/login?next=/ HTTP/1.1[0m" 302 -
+2025-06-08 12:22:01,512 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:01] "GET / HTTP/1.1" 200 -
+2025-06-08 12:22:01,580 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:01] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:22:01,580 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:01] "GET /api/system_state HTTP/1.1" 200 -
+2025-06-08 12:22:01,586 - INFO - 🔗 客户端连接成功: byvXbeK0xdVplP93AAAB
+2025-06-08 12:22:01,708 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:01] "GET /map HTTP/1.1" 200 -
+2025-06-08 12:22:04,582 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:04] "GET /map?1749356524575 HTTP/1.1" 200 -
+2025-06-08 12:22:06,663 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:06] "[32mGET /auth/logout HTTP/1.1[0m" 302 -
+2025-06-08 12:22:06,669 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:06] "GET /auth/login HTTP/1.1" 200 -
+2025-06-08 12:22:06,739 - INFO - 🔌 客户端断开连接: byvXbeK0xdVplP93AAAB
+2025-06-08 12:22:15,971 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:15] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-08 12:22:15,977 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:15] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:22:15,991 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:15] "GET /admin HTTP/1.1" 200 -
+2025-06-08 12:22:16,036 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:16] "GET /api/user_info HTTP/1.1" 200 -
+2025-06-08 12:22:16,039 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:16] "GET /api/voice_status HTTP/1.1" 200 -
+2025-06-08 12:22:16,043 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:16] "GET /api/video_status HTTP/1.1" 200 -
+2025-06-08 12:22:17,046 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:17] "GET /api/admin/system_stats HTTP/1.1" 200 -
+2025-06-08 12:22:19,009 - INFO - 127.0.0.1 - - [08/Jun/2025 12:22:19] "[33mGET /logout HTTP/1.1[0m" 404 -
+2025-06-08 12:23:23,423 - INFO - ✅ 模块导入成功
+2025-06-08 12:23:23,873 - INFO - 🎵 音频模块初始化成功
+2025-06-08 12:23:26,298 - INFO - 🎵 扫描到 7 首音乐:
+2025-06-08 12:23:26,298 - INFO -    1. 司南 - 冬眠 (4:29)
+2025-06-08 12:23:26,298 - INFO -    2. 周杰伦 - 晴天 (4:29)
+2025-06-08 12:23:26,298 - INFO -    3. 周杰伦 - 花海 (4:24)
+2025-06-08 12:23:26,298 - INFO -    4. 孙楠 韩红 - 美丽的神话 (4:52)
+2025-06-08 12:23:26,298 - INFO -    5. 杨丞琳 - 雨爱 (4:20)
+2025-06-08 12:23:26,298 - INFO -    6. 林俊杰 - 心墙 (3:45)
+2025-06-08 12:23:26,298 - INFO -    7. 温奕心 - 一路生花 (4:16)
+2025-06-08 12:23:26,334 - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\86182\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-06-08 12:23:26,334 - INFO - Using writeable comtypes cache directory: 'C:\Users\86182\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\comtypes\gen'
+2025-06-08 12:23:26,504 - INFO - ✅ 简单语音提醒系统初始化成功
+2025-06-08 12:23:26,504 - INFO - 🚗 车载智能系统已初始化
+2025-06-08 12:23:26,508 - INFO - 🚗 车载多模态交互系统启动中...
+2025-06-08 12:23:26,508 - INFO - ==================================================
+2025-06-08 12:23:26,600 - INFO - ✅ 已更新管理员密码
+2025-06-08 12:23:26,601 - INFO - 🗺️ 正在初始化导航模块...
+2025-06-08 12:23:26,676 - INFO - ✅ 导航模块启动成功
+2025-06-08 12:23:26,676 - INFO - ✅ 导航模块已启动
+2025-06-08 12:23:26,676 - INFO - 🎤 正在初始化语音识别...
+2025-06-08 12:23:29,126 - INFO - ✅ 语音识别线程已启动
+2025-06-08 12:23:29,126 - INFO - ✅ 语音识别模块已启动
+2025-06-08 12:23:29,126 - INFO - 📹 正在初始化视觉识别...
+2025-06-08 12:23:29,126 - ERROR - ❌ 视觉识别启动失败: name 'VisionRecognition' is not defined
+2025-06-08 12:23:29,126 - WARNING - ⚠️ 视觉识别模块启动失败，将继续运行其他功能
+2025-06-08 12:23:29,126 - INFO - ==================================================
+2025-06-08 12:23:29,126 - INFO - 🌐 Web服务器启动中...
+2025-06-08 12:23:29,126 - INFO - 📱 系统登录: http://localhost:5000/login
+2025-06-08 12:23:29,126 - INFO - 👤 用户界面: http://localhost:5000/ (登录后)
+2025-06-08 12:23:29,126 - INFO - 🔧 管理界面: http://localhost:5000/admin (管理员登录后)
+2025-06-08 12:23:29,126 - INFO - 🗺️ 地图页面: http://localhost:5000/map
+2025-06-08 12:23:29,126 - INFO - ⚡ 按 Ctrl+C 退出系统
+2025-06-08 12:23:29,126 - INFO - ==================================================
+2025-06-08 12:23:29,126 - WARNING - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-06-08 12:23:29,150 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.130.176.26:5000
+2025-06-08 12:23:29,150 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-08 12:23:31,025 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:31] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:23:31,038 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:31] "GET /auth/login?next=/ HTTP/1.1" 200 -
+2025-06-08 12:23:37,478 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:37] "[32mPOST /auth/login?next=/ HTTP/1.1[0m" 302 -
+2025-06-08 12:23:37,504 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:37] "GET / HTTP/1.1" 200 -
+2025-06-08 12:23:37,582 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:37] "GET /api/navigation_status HTTP/1.1" 200 -
+2025-06-08 12:23:37,583 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:37] "GET /api/system_state HTTP/1.1" 200 -
+2025-06-08 12:23:37,587 - INFO - 🔗 客户端连接成功: bpGhSsmiMOpmHWj-AAAB
+2025-06-08 12:23:37,734 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:37] "GET /map HTTP/1.1" 200 -
+2025-06-08 12:23:40,587 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:40] "GET /map?1749356620579 HTTP/1.1" 200 -
+2025-06-08 12:23:42,377 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:42] "[32mGET /auth/logout HTTP/1.1[0m" 302 -
+2025-06-08 12:23:42,390 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:42] "GET /auth/login HTTP/1.1" 200 -
+2025-06-08 12:23:42,443 - INFO - 🔌 客户端断开连接: bpGhSsmiMOpmHWj-AAAB
+2025-06-08 12:23:49,846 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:49] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-08 12:23:49,861 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:49] "[32mGET / HTTP/1.1[0m" 302 -
+2025-06-08 12:23:49,873 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:49] "GET /admin HTTP/1.1" 200 -
+2025-06-08 12:23:49,920 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:49] "GET /api/user_info HTTP/1.1" 200 -
+2025-06-08 12:23:49,937 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:49] "GET /api/voice_status HTTP/1.1" 200 -
+2025-06-08 12:23:49,938 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:49] "GET /api/video_status HTTP/1.1" 200 -
+2025-06-08 12:23:50,944 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:50] "GET /api/admin/system_stats HTTP/1.1" 200 -
+2025-06-08 12:23:51,601 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:51] "[32mGET /auth/logout HTTP/1.1[0m" 302 -
+2025-06-08 12:23:51,612 - INFO - 127.0.0.1 - - [08/Jun/2025 12:23:51] "GET /auth/login HTTP/1.1" 200 -

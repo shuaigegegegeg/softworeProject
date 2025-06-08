@@ -413,7 +413,7 @@
             <div class="admin-title">🚗 车载系统管理后台</div>
             <div class="admin-user">
                 <span>管理员: <span id="currentUser">加载中...</span></span>
-                <a href="/logout" class="logout-btn">退出登录</a>
+                <a href="{{ url_for('auth.logout') }}" class="logout-btn">退出登录</a>
             </div>
         </header>
 

@@ -712,9 +712,9 @@
                 <div class="user-info">
                     <span class="user-name">用户: <span id="currentUser">{{ current_user.username if current_user.is_authenticated else 'Guest' }}</span></span>
                     {% if current_user.is_authenticated and current_user.is_admin() %}
-                    <a href="/admin" class="admin-link" target="_blank">🔧 管理后台</a>
+                    <a href="{{ url_for('admin_dashboard') }}" class="admin-link" target="_blank">🔧 管理后台</a>
                     {% endif %}
-                    <a href="/logout" class="logout-btn">退出登录</a>
+                    <a href="{{ url_for('auth.logout') }}" class="logout-btn">退出登录</a>
                 </div>
             </div>
         </header>

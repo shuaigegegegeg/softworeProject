@@ -67,7 +67,7 @@ def passenger_register():
         db.session.commit()
 
         flash('注册成功，请登录', 'success')
-        return redirect(url_for('auth.passenger_login'))
+        return redirect(url_for('auth.login'))
 
     # GET 请求渲染页面
     return render_template('passenger_register.html')
