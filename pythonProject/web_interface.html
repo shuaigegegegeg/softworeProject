@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车载多模态交互系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            grid-template-rows: 80px 1fr;
+            min-height: 100vh;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        /* 顶部导航栏 */
+        .top-bar {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            position: sticky;
+            top: 15px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo::before {
+            content: "🚗";
+            font-size: 32px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.active { background: #00ff88; }
+        .status-dot.warning { background: #ffaa00; }
+        .status-dot.error { background: #ff4444; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 用户信息和退出按钮 */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .logout-btn {
+            padding: 6px 12px;
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 15px;
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .admin-link {
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 15px;
+            color: #00d4ff;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-link:hover {
+            background: rgba(0, 212, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* 左侧控制面板 */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            margin-bottom: 30px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .control-button {
+            background: linear-gradient(135deg, rgba(91, 134, 229, 0.2), rgba(0, 212, 255, 0.2));
+            border: 1px solid rgba(91, 134, 229, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .control-button:hover {
+            background: linear-gradient(135deg, rgba(91, 134, 229, 0.4), rgba(0, 212, 255, 0.4));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .control-button.active {
+            background: linear-gradient(135deg, #5b86e5, #00d4ff);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        /* 导航控制组 */
+        .navigation-control {
+            margin-top: 20px;
+        }
+
+        .destination-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .destination-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* 中央主显示区域 */
+        .main-display {
+            display: grid;
+            grid-template-rows: 0.6fr 0.4fr;
+            gap: 15px;
+            min-height: 520px;
+        }
+
+        /* 地图显示区域 */
+        .navigation-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+            min-height: 500px;
+            max-height: 500px;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1), rgba(0, 0, 0, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 200px;
+        }
+
+        /* 地图iframe */
+        .map-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 20px;
+        }
+
+        .map-placeholder {
+            font-size: 48px;
+            opacity: 0.5;
+            animation: breathe 3s ease-in-out infinite;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            z-index: 2;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 10;
+        }
+
+        .overlay-info {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+
+        /* 导航状态指示器 */
+        .navigation-status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 12px;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navigation-status.navigating {
+            background: rgba(0, 123, 186, 0.8);
+        }
+
+        .navigation-status.ready {
+            background: rgba(0, 255, 136, 0.8);
+        }
+
+        .navigation-status.error {
+            background: rgba(255, 68, 68, 0.8);
+        }
+
+        .stop-navigation-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .music-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            min-height: 280px;
+        }
+
+        .now-playing {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .album-art {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .song-info h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .song-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+
+        .music-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .music-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .music-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .music-btn.play {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #5b86e5, #00d4ff);
+            font-size: 24px;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5b86e5, #00d4ff);
+            width: 35%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-time {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 右侧状态面板 */
+        .status-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-card h4 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .status-value {
+            font-weight: 600;
+        }
+
+        .temperature-display {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .temp-value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 导航状态卡片 */
+        .navigation-status-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navigation-status-card h4 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+
+        .navigation-info {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .navigation-info.navigating {
+            color: #00ff88;
+        }
+
+        .navigation-info.ready {
+            color: #ffaa00;
+        }
+
+        /* 命令历史卡片 */
+        .command-history-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .command-history-card h4 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+
+        .command-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+
+        .command-item:last-child {
+            border-bottom: none;
+        }
+
+        .command-type {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .command-type.voice { background: rgba(255, 107, 107, 0.3); }
+        .command-type.gesture { background: rgba(0, 212, 255, 0.3); }
+        .command-type.system { background: rgba(0, 255, 136, 0.3); }
+        .command-type.navigation { background: rgba(255, 165, 0, 0.3); }
+
+        .command-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .command-time {
+            font-size: 10px;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 280px 1fr 320px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 80px auto auto auto;
+                min-height: auto;
+            }
+
+            .main-display {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr;
+                min-height: 500px;
+            }
+
+            .control-panel, .status-panel {
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-display {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                min-height: auto;
+            }
+
+            .container {
+                padding: 15px;
+                gap: 15px;
+                grid-template-rows: 80px auto auto auto;
+            }
+
+            .navigation-section, .music-section {
+                min-height: 250px;
+            }
+
+            .control-panel, .status-panel {
+                max-height: none;
+                overflow-y: visible;
+            }
+        }
+
+        /* 动画效果 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #5b86e5, #00d4ff);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #00d4ff, #5b86e5);
+        }
+
+        /* 确保在较小屏幕上内容可见 */
+        @media (max-height: 800px) {
+            .container {
+                min-height: auto;
+            }
+
+            .control-panel, .status-panel {
+                max-height: 60vh;
+            }
+
+            .main-display {
+                min-height: 500px;
+            }
+        }
+
+        /* 连接状态提示 */
+        .connection-alert {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 107, 107, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1000;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <header class="top-bar">
+            <div class="logo">
+                车载智能系统
+            </div>
+            <div class="system-status">
+                <div class="status-indicator">
+                    <div class="status-dot active" id="systemDot"></div>
+                    <span id="systemStatus">系统运行中</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot active" id="connectionDot"></div>
+                    <span id="connectionStatus">已连接</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" id="navigationDot"></div>
+                    <span id="navigationStatus">地图加载中</span>
+                </div>
+                <div class="status-indicator">
+                    <span id="systemTime">--:--:--</span>
+                </div>
+
+                <!-- 用户信息和操作 -->
+                <div class="user-info">
+                    <span class="user-name">用户: <span id="currentUser">{{ current_user.username if current_user.is_authenticated else 'Guest' }}</span></span>
+                    {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <a href="/admin" class="admin-link" target="_blank">🔧 管理后台</a>
+                    {% endif %}
+                    <a href="/logout" class="logout-btn">退出登录</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- 左侧控制面板 -->
+        <aside class="control-panel">
+            <!-- 导航控制 -->
+            <div class="panel-section">
+                <h3 class="panel-title">🗺️ 导航控制</h3>
+                <div class="navigation-control">
+                    <input type="text" class="destination-input" id="destinationInput" placeholder="输入目的地，如：天津站">
+                    <div class="control-group">
+                        <button class="control-button" id="startNavigationBtn">
+                            <span>🧭</span> 开始导航
+                        </button>
+                        <button class="control-button" id="stopNavigationBtn">
+                            <span>🛑</span> 停止导航
+                        </button>
+                        <button class="control-button" id="refreshMapBtn">
+                            <span>🔄</span> 刷新地图
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">🎵 音乐控制</h3>
+                <div class="control-group">
+                    <button class="control-button" id="playPauseBtn">
+                        <span>▶️</span> 播放/暂停
+                    </button>
+                    <button class="control-button" id="nextBtn">
+                        <span>⏭️</span> 下一首
+                    </button>
+                    <button class="control-button" id="prevBtn">
+                        <span>⏮️</span> 上一首
+                    </button>
+                    <button class="control-button" id="shuffleBtn">
+                        <span>🔀</span> 随机播放
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">🌡️ 空调控制</h3>
+                <div class="control-group">
+                    <button class="control-button" id="acToggleBtn">
+                        <span>❄️</span> 开关空调
+                    </button>
+                    <button class="control-button" id="tempUpBtn">
+                        <span>🔺</span> 升温
+                    </button>
+                    <button class="control-button" id="tempDownBtn">
+                        <span>🔻</span> 降温
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">🚗 车窗控制</h3>
+                <div class="control-group">
+                    <button class="control-button" id="windowOpenBtn">
+                        <span>🔽</span> 开启车窗
+                    </button>
+                    <button class="control-button" id="windowCloseBtn">
+                        <span>🔼</span> 关闭车窗
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">💡 灯光控制</h3>
+                <div class="control-group">
+                    <button class="control-button" id="headlightsBtn">
+                        <span>💡</span> 大灯
+                    </button>
+                    <button class="control-button" id="interiorBtn">
+                        <span>🏠</span> 室内灯
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 中央主显示区域 -->
+        <main class="main-display">
+            <!-- 地图导航区域 -->
+            <section class="navigation-section">
+                <div class="map-container">
+                    <!-- 地图iframe -->
+                    <iframe id="mapFrame" class="map-frame" src="/map" style="display: none;"></iframe>
+
+                    <!-- 加载占位符 -->
+                    <div class="map-placeholder" id="mapPlaceholder">🗺️</div>
+                    <div class="map-loading" id="mapLoading">正在加载地图...</div>
+
+                    <!-- 地图叠加层 -->
+                    <div class="map-overlay">
+                        <div class="overlay-info">
+                            <div>当前位置: <span id="currentLocation">定位中...</span></div>
+                        </div>
+                        <div class="overlay-info">
+                            <div>驾驶员状态: <span id="driverState">正常</span></div>
+                            <div>手势: <span id="gestureState">无</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 导航状态指示器 -->
+                    <div class="navigation-status ready" id="navigationStatusIndicator">
+                        <span id="navigationStatusText">导航系统就绪</span>
+                        <button class="stop-navigation-btn" id="quickStopBtn" style="display: none;">停止导航</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 音乐播放区域 -->
+            <section class="music-section">
+                <div class="now-playing">
+                    <div class="album-art">🎵</div>
+                    <div class="song-info">
+                        <h3 id="songTitle">晴天</h3>
+                        <p id="songArtist">周杰伦</p>
+                    </div>
+                </div>
+
+                <div class="music-controls">
+                    <button class="music-btn" id="musicPrevBtn">⏮️</button>
+                    <button class="music-btn play" id="musicPlayBtn">▶️</button>
+                    <button class="music-btn" id="musicNextBtn">⏭️</button>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-time">
+                        <span id="currentTime">0:00</span>
+                        <span id="totalTime">4:30</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 右侧状态面板 -->
+        <aside class="status-panel">
+            <!-- 导航状态卡片 -->
+            <div class="navigation-status-card">
+                <h4>🧭 导航状态</h4>
+                <div class="navigation-info" id="navCurrentLocation">当前位置: 定位中...</div>
+                <div class="navigation-info" id="navDestination">目的地: 未设置</div>
+                <div class="navigation-info" id="navDistance">距离: --</div>
+                <div class="navigation-info" id="navDuration">预计时间: --</div>
+                <div class="navigation-info" id="navStatus">状态: 就绪</div>
+            </div>
+
+            <div class="status-card">
+                <h4>🌡️ 车内环境</h4>
+                <div class="temperature-display">
+                    <div class="temp-value" id="temperature">22°C</div>
+                    <div>空调: <span id="acStatus">关闭</span></div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h4>🚗 车辆状态</h4>
+                <div class="status-item">
+                    <span>引擎</span>
+                    <span class="status-value" id="engineStatus">启动</span>
+                </div>
+                <div class="status-item">
+                    <span>燃油</span>
+                    <span class="status-value" id="fuelLevel">75%</span>
+                </div>
+                <div class="status-item">
+                    <span>速度</span>
+                    <span class="status-value" id="speed">0 km/h</span>
+                </div>
+                <div class="status-item">
+                    <span>档位</span>
+                    <span class="status-value" id="gear">P</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h4>📊 系统监控</h4>
+                <div class="status-item">
+                    <span>CPU</span>
+                    <span class="status-value" id="cpuUsage">35%</span>
+                </div>
+                <div class="status-item">
+                    <span>内存</span>
+                    <span class="status-value" id="memoryUsage">42%</span>
+                </div>
+                <div class="status-item">
+                    <span>温度</span>
+                    <span class="status-value" id="systemTemp">45°C</span>
+                </div>
+            </div>
+
+            <div class="command-history-card">
+                <h4>📋 最近命令</h4>
+                <div style="margin-bottom: 10px;">
+                    <button onclick="carSystem.testConnection()" style="
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        padding: 8px 16px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        margin-right: 5px;
+                        margin-bottom: 5px;
+                    ">测试连接</button>
+                    <button onclick="carSystem.checkVoiceStatus()" style="
+                        background: linear-gradient(135deg, #ff6b6b, #ffa500);
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        padding: 8px 16px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        margin-right: 5px;
+                        margin-bottom: 5px;
+                    ">语音状态</button>
+                    <button onclick="carSystem.testVoiceCommand()" style="
+                        background: linear-gradient(135deg, #00d4ff, #5b86e5);
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        padding: 8px 16px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        margin-right: 5px;
+                        margin-bottom: 5px;
+                    ">测试语音</button>
+                    <button onclick="carSystem.checkNavigationStatus()" style="
+                        background: linear-gradient(135deg, #00ff88, #32cd32);
+                        border: none;
+                        border-radius: 8px;
+                        color: white;
+                        padding: 8px 16px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        margin-bottom: 5px;
+                    ">导航状态</button>
+                </div>
+                <div id="commandHistory">
+                    <div class="command-item">
+                        <span class="command-type voice">语音</span>
+                        <span class="command-text">播放音乐</span>
+                        <span class="command-time">15:30:24</span>
+                    </div>
+                    <div class="command-item">
+                        <span class="command-type gesture">手势</span>
+                        <span class="command-text">音量加</span>
+                        <span class="command-time">15:29:18</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- 连接状态提示 -->
+    <div class="connection-alert" id="connectionAlert">
+        <span id="connectionAlertText">连接已断开，正在尝试重连...</span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script>
+        // 系统状态管理（认证版本）
+        class CarSystemUI {
+            constructor() {
+                this.currentSong = {
+                    title: "无音乐",
+                    artist: "未知",
+                    album: "未知专辑",
+                    file_path: "",
+                    is_playing: false,
+                    is_paused: false,
+                    progress: 0,
+                    duration: 0,
+                    progress_percentage: 0,
+                    volume: 50,
+                    total_files: 0,
+                    current_index: 0,
+                    shuffle_mode: false,
+                    repeat_mode: 'none',
+                    current_time_str: '0:00',
+                    total_time_str: '0:00',
+                    playlist: []
+                };
+
+                this.systemData = {
+                    temperature: 22,
+                    acOn: false,
+                    engineOn: true,
+                    fuelLevel: 75,
+                    speed: 0,
+                    gear: "P"
+                };
+
+                this.navigationData = {
+                    is_navigating: false,
+                    current_location: null,
+                    destination: null,
+                    distance: 0,
+                    duration: 0,
+                    map_ready: false
+                };
+
+                this.commandHistory = [];
+                this.socket = null;
+                this.mapLoaded = false;
+                this.connectionRetryCount = 0;
+                this.maxRetries = 5;
+                this.retryInterval = 3000; // 3秒
+
+                this.init();
+            }
+
+            init() {
+                this.initWebSocket();
+                this.bindEvents();
+                this.startTimeUpdate();
+                this.startSystemMonitor();
+                this.initMapDisplay();
+                this.updateDisplay();
+                this.loadNavigationStatus();
+                this.checkAuthenticationStatus();
+            }
+
+            checkAuthenticationStatus() {
+                // 检查用户是否已认证
+                fetch('/api/system_state')
+                    .then(response => {
+                        if (response.status === 401) {
+                            // 用户未认证，重定向到登录页面
+                            window.location.href = '/login';
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data) {
+                            console.log('✅ 用户认证状态正常');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ 认证状态检查失败:', error);
+                        this.showConnectionAlert('认证状态检查失败');
+                    });
+            }
+
+            initWebSocket() {
+                console.log('🔌 正在初始化WebSocket连接...');
+
+                if (typeof io === 'undefined') {
+                    console.error('❌ Socket.IO库未加载!');
+                    this.showNotification('Socket.IO库加载失败', 'error');
+                    this.updateConnectionStatus(false);
+                    return;
+                }
+
+                try {
+                    this.socket = io({
+                        transports: ['websocket', 'polling'],
+                        timeout: 20000,
+                        forceNew: true,
+                        reconnection: true,
+                        reconnectionDelay: 1000,
+                        reconnectionAttempts: 5,
+                        maxHttpBufferSize: 1e6,
+                        pingTimeout: 60000,
+                        pingInterval: 25000
+                    });
+
+                    // 音乐进度更新事件
+                    this.socket.on('music_progress', (data) => {
+                        console.log('🎵 收到音乐进度更新:', data);
+                        if (data && data.type === 'progress_update') {
+                            this.currentSong.progress = data.progress || 0;
+                            this.currentSong.progress_percentage = data.progress_percentage || 0;
+                            this.currentSong.current_time_str = data.current_time_str || '0:00';
+                            this.currentSong.total_time_str = data.total_time_str || '0:00';
+
+                            const progressFill = document.getElementById('progressFill');
+                            if (progressFill) {
+                                progressFill.style.width = this.currentSong.progress_percentage + '%';
+                            }
+
+                            const currentTimeEl = document.getElementById('currentTime');
+                            if (currentTimeEl) currentTimeEl.textContent = this.currentSong.current_time_str;
+
+                            const totalTimeEl = document.getElementById('totalTime');
+                            if (totalTimeEl) totalTimeEl.textContent = this.currentSong.total_time_str;
+                        }
+                    });
+
+                    // 连接成功事件
+                    this.socket.on('connect', () => {
+                        console.log('✅ WebSocket已连接到车载系统服务器');
+                        console.log('连接ID:', this.socket.id);
+                        this.updateConnectionStatus(true);
+                        this.hideConnectionAlert();
+                        this.connectionRetryCount = 0;
+                        this.showNotification('系统已连接', 'success');
+                        this.requestSystemState();
+                    });
+
+                    // 连接断开事件
+                    this.socket.on('disconnect', (reason) => {
+                        console.log('❌ WebSocket连接断开:', reason);
+                        this.updateConnectionStatus(false);
+                        this.showConnectionAlert('连接已断开，正在尝试重连...');
+
+                        if (reason === 'io server disconnect') {
+                            this.showNotification('服务器主动断开连接', 'error');
+                        } else if (reason === 'io client disconnect') {
+                            this.showNotification('客户端主动断开连接', 'info');
+                        } else {
+                            this.showNotification('连接断开: ' + reason, 'warning');
+                        }
+
+                        // 自动重连逻辑
+                        if (reason !== 'io client disconnect' && this.connectionRetryCount < this.maxRetries) {
+                            setTimeout(() => {
+                                if (!this.socket.connected) {
+                                    console.log(`🔄 尝试重新连接WebSocket... (${this.connectionRetryCount + 1}/${this.maxRetries})`);
+                                    this.connectionRetryCount++;
+                                    this.socket.connect();
+                                }
+                            }, this.retryInterval);
+                        } else if (this.connectionRetryCount >= this.maxRetries) {
+                            this.showConnectionAlert('连接失败，请刷新页面重试');
+                        }
+                    });
+
+                    // 连接错误事件
+                    this.socket.on('connect_error', (error) => {
+                        console.error('❌ WebSocket连接错误:', error);
+                        this.updateConnectionStatus(false);
+                        this.showConnectionAlert('连接错误: ' + error.message);
+                        this.showNotification('连接错误: ' + error.message, 'error');
+                    });
+
+                    // 系统更新事件
+                    this.socket.on('system_update', (data) => {
+                        console.log('📨 收到系统更新数据:', data);
+                        if (!data) {
+                            console.warn('⚠️ 收到空的更新数据');
+                            return;
+                        }
+                        this.handleSystemUpdate(data);
+                    });
+
+                    // 通用错误事件
+                    this.socket.on('error', (error) => {
+                        console.error('❌ WebSocket错误:', error);
+                        this.showNotification('WebSocket错误', 'error');
+                    });
+
+                    // 测试事件
+                    this.socket.on('test_message', (data) => {
+                        console.log('🧪 收到测试消息:', data);
+                        this.showNotification('收到测试消息: ' + JSON.stringify(data), 'info');
+                    });
+
+                } catch (error) {
+                    console.error('❌ WebSocket初始化失败:', error);
+                    this.updateConnectionStatus(false);
+                    this.showNotification('WebSocket初始化失败', 'error');
+                    this.showConnectionAlert('初始化失败: ' + error.message);
+                }
+            }
+
+            showConnectionAlert(message) {
+                const alert = document.getElementById('connectionAlert');
+                const alertText = document.getElementById('connectionAlertText');
+                alertText.textContent = message;
+                alert.style.display = 'block';
+            }
+
+            hideConnectionAlert() {
+                const alert = document.getElementById('connectionAlert');
+                alert.style.display = 'none';
+            }
+
+            // ============ 核心方法（与原版本相同但增加了认证检查） ============
+            handleSystemUpdate(data) {
+                console.log('🔄 开始处理系统状态更新:', data);
+
+                if (!data) {
+                    console.warn('⚠️ 数据为空，跳过更新');
+                    return;
+                }
+
+                if (data.state) {
+                    console.log('📊 更新系统状态...');
+
+                    // 更新导航状态
+                    if (data.state.navigation) {
+                        console.log('🧭 更新导航状态:', data.state.navigation);
+                        const oldNavigating = this.navigationData.is_navigating;
+                        const oldDestination = this.navigationData.destination ? this.navigationData.destination.name : null;
+                        this.updateNavigationStatus(data.state.navigation);
+                        const newNavigating = data.state.navigation.is_navigating;
+                        const newDestination = data.state.navigation.destination ? data.state.navigation.destination.name : null;
+                        const shouldRefreshMap = (
+                            oldNavigating !== newNavigating ||
+                            oldDestination !== newDestination ||
+                            (!oldNavigating && newNavigating) ||
+                            (oldNavigating && !newNavigating)
+                        );
+                        if (shouldRefreshMap) {
+                            console.log('🔄 检测到导航变化，准备刷新地图...');
+                            setTimeout(() => {
+                                this.refreshMap();
+                                console.log('🗺️ 地图已刷新');
+                            }, 1500);
+                        }
+                    }
+
+                    // 更新音乐状态
+                    if (data.state.music) {
+                        console.log('🎵 更新音乐状态:', data.state.music);
+                        this.currentSong.title = data.state.music.title || "无音乐";
+                        this.currentSong.artist = data.state.music.artist || "未知";
+                        this.currentSong.album = data.state.music.album || "未知专辑";
+                        this.currentSong.file_path = data.state.music.file_path || "";
+                        this.currentSong.is_playing = data.state.music.is_playing || false;
+                        this.currentSong.is_paused = data.state.music.is_paused || false;
+                        this.currentSong.progress = data.state.music.progress || 0;
+                        this.currentSong.duration = data.state.music.duration || 0;
+                        this.currentSong.progress_percentage = data.state.music.progress_percentage || 0;
+                        this.currentSong.volume = data.state.music.volume || 50;
+                        this.currentSong.total_files = data.state.music.total_files || 0;
+                        this.currentSong.current_index = data.state.music.current_index || 0;
+                        this.currentSong.shuffle_mode = data.state.music.shuffle_mode || false;
+                        this.currentSong.repeat_mode = data.state.music.repeat_mode || 'none';
+                        this.currentSong.current_time_str = data.state.music.current_time_str || '0:00';
+                        this.currentSong.total_time_str = data.state.music.total_time_str || '0:00';
+                        this.currentSong.playlist = data.state.music.playlist || [];
+                        this.updatePlayButton();
+                        this.updateMusicDisplay();
+                        this.updateVolumeDisplay();
+                        this.updatePlaylistInfo();
+                    }
+
+                    // 更新空调状态
+                    if (data.state.ac) {
+                        console.log('❄️ 更新空调状态:', data.state.ac);
+                        this.systemData.temperature = data.state.ac.temperature || this.systemData.temperature;
+                        this.systemData.acOn = data.state.ac.is_on || false;
+                        const acBtn = document.getElementById('acToggleBtn');
+                        if (acBtn) {
+                            if (this.systemData.acOn) {
+                                acBtn.classList.add('active');
+                            } else {
+                                acBtn.classList.remove('active');
+                            }
+                        }
+                        const tempElement = document.getElementById('temperature');
+                        if (tempElement) {
+                            tempElement.textContent = this.systemData.temperature + '°C';
+                        }
+                        const acStatusElement = document.getElementById('acStatus');
+                        if (acStatusElement) {
+                            acStatusElement.textContent = this.systemData.acOn ? '开启' : '关闭';
+                        }
+                    }
+
+                    // 更新车窗状态
+                    if (data.state.windows) {
+                        console.log('🪟 车窗状态更新:', data.state.windows);
+                    }
+
+                    // 更新灯光状态
+                    if (data.state.lights) {
+                        console.log('💡 更新灯光状态:', data.state.lights);
+                        const headlightsBtn = document.getElementById('headlightsBtn');
+                        if (headlightsBtn && data.state.lights.headlights !== undefined) {
+                            if (data.state.lights.headlights) {
+                                headlightsBtn.classList.add('active');
+                            } else {
+                                headlightsBtn.classList.remove('active');
+                            }
+                        }
+                        const interiorBtn = document.getElementById('interiorBtn');
+                        if (interiorBtn && data.state.lights.interior !== undefined) {
+                            if (data.state.lights.interior) {
+                                interiorBtn.classList.add('active');
+                            } else {
+                                interiorBtn.classList.remove('active');
+                            }
+                        }
+                    }
+
+                    // 更新驾驶员状态
+                    if (data.state.driver) {
+                        const driverStateElement = document.getElementById('driverState');
+                        if (driverStateElement) {
+                            driverStateElement.textContent = data.state.driver.state;
+                        }
+                    }
+
+                    // 更新手势状态
+                    if (data.state.gesture) {
+                        const gestureStateElement = document.getElementById('gestureState');
+                        if (gestureStateElement) {
+                            gestureStateElement.textContent = data.state.gesture.current;
+                        }
+                    }
+                }
+
+                // 更新命令历史
+                if (data.command_history && Array.isArray(data.command_history)) {
+                    console.log('📜 更新命令历史:', data.command_history.length, '条记录');
+                    this.commandHistory = data.command_history;
+                    this.updateCommandHistory();
+                }
+
+                // 显示执行结果
+                if (data.result) {
+                    console.log('✅ 显示操作结果:', data.result);
+                    this.showNotification(data.result, 'success');
+                    if (data.result.includes('开始导航') || data.result.includes('导航到') ||
+                        data.result.includes('路线') || data.result.includes('规划') ||
+                        data.result.includes('导航开始')) {
+                        console.log('🧭 检测到导航开始结果，强制刷新地图');
+                        setTimeout(() => {
+                            this.loadNavigationStatus();
+                            this.refreshMap();
+                        }, 2000);
+                    } else if (data.result.includes('导航已停止') || data.result.includes('停止导航')) {
+                        console.log('🛑 检测到导航停止结果，刷新地图');
+                        setTimeout(() => {
+                            this.loadNavigationStatus();
+                            this.refreshMap();
+                        }, 1000);
+                    }
+                }
+                console.log('🔄 系统状态更新处理完成');
+            }
+
+            // ============ 其他方法保持不变（为节省空间这里省略具体实现） ============
+            // 包括：
+            // - initMapDisplay()
+            // - loadNavigationStatus()
+            // - updateNavigationStatus()
+            // - refreshMap()
+            // - startNavigation()
+            // - stopNavigation()
+            // - 音乐控制方法
+            // - 空调控制方法
+            // - 等等...
+
+            // 为了简化，这里只包含核心的不同之处
+            initMapDisplay() {
+                console.log('🗺️ 初始化地图显示...');
+                const mapFrame = document.getElementById('mapFrame');
+                const mapPlaceholder = document.getElementById('mapPlaceholder');
+                const mapLoading = document.getElementById('mapLoading');
+                const navigationStatusIndicator = document.getElementById('navigationStatusIndicator');
+                const navigationDot = document.getElementById('navigationDot');
+                const navigationStatus = document.getElementById('navigationStatus');
+
+                setTimeout(() => {
+                    mapFrame.onload = () => {
+                        console.log('✅ 地图加载成功');
+                        this.mapLoaded = true;
+                        mapFrame.style.display = 'block';
+                        mapPlaceholder.style.display = 'none';
+                        mapLoading.style.display = 'none';
+                        navigationStatusIndicator.className = 'navigation-status ready';
+                        document.getElementById('navigationStatusText').textContent = '导航系统就绪';
+                        navigationDot.className = 'status-dot active';
+                        navigationStatus.textContent = '地图就绪';
+                        this.showNotification('地图系统已就绪', 'success');
+                    };
+
+                    mapFrame.onerror = (error) => {
+                        console.error('❌ 地图加载失败:', error);
+                        this.mapLoaded = false;
+                        mapFrame.style.display = 'none';
+                        mapPlaceholder.style.display = 'block';
+                        mapLoading.textContent = '地图加载失败';
+                        navigationStatusIndicator.className = 'navigation-status error';
+                        document.getElementById('navigationStatusText').textContent = '地图错误';
+                        navigationDot.className = 'status-dot error';
+                        navigationStatus.textContent = '地图异常';
+                        setTimeout(() => {
+                            console.log('🔄 尝试重新加载地图...');
+                            mapFrame.src = '/map?' + new Date().getTime();
+                        }, 5000);
+                    };
+
+                    mapFrame.src = '/map?' + new Date().getTime();
+                }, 3000);
+
+                setTimeout(() => {
+                    if (!this.mapLoaded) {
+                        console.warn('⚠️ 地图加载超时');
+                        mapLoading.textContent = '地图连接超时，尝试重新连接...';
+                        navigationStatusIndicator.className = 'navigation-status error';
+                        document.getElementById('navigationStatusText').textContent = '连接超时';
+                        navigationDot.className = 'status-dot warning';
+                        navigationStatus.textContent = '地图超时';
+                    }
+                }, 15000);
+            }
+
+            // ============ 保留的核心方法 ============
+            loadNavigationStatus() {
+                fetch('/api/navigation_status')
+                    .then(response => {
+                        if (response.status === 401) {
+                            window.location.href = '/login';
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('🧭 导航状态:', data);
+                        this.updateNavigationStatus(data);
+                    })
+                    .catch(error => {
+                        console.error('❌ 获取导航状态失败:', error);
+                    });
+            }
+
+            updateNavigationStatus(data) {
+                if (!data) return;
+                this.navigationData = { ...this.navigationData, ...data };
+                const currentLocationEl = document.getElementById('currentLocation');
+                const navCurrentLocationEl = document.getElementById('navCurrentLocation');
+                const navDestinationEl = document.getElementById('navDestination');
+                const navDistanceEl = document.getElementById('navDistance');
+                const navDurationEl = document.getElementById('navDuration');
+                const navStatusEl = document.getElementById('navStatus');
+                const navigationStatusIndicator = document.getElementById('navigationStatusIndicator');
+                const navigationStatusText = document.getElementById('navigationStatusText');
+                const quickStopBtn = document.getElementById('quickStopBtn');
+
+                if (data.current_location) {
+                    const locationText = data.current_location.address || '已定位';
+                    if (currentLocationEl) currentLocationEl.textContent = locationText;
+                    if (navCurrentLocationEl) navCurrentLocationEl.textContent = `当前位置: ${locationText}`;
+                }
+
+                if (data.is_navigating && data.destination) {
+                    if (navDestinationEl) navDestinationEl.textContent = `目的地: ${data.destination.name || data.destination.address}`;
+                    if (navStatusEl) {
+                        navStatusEl.textContent = '状态: 导航中';
+                        navStatusEl.className = 'navigation-info navigating';
+                    }
+                    if (navigationStatusIndicator) {
+                        navigationStatusIndicator.className = 'navigation-status navigating';
+                    }
+                    if (navigationStatusText) {
+                        navigationStatusText.textContent = `导航至 ${data.destination.name || data.destination.address}`;
+                    }
+                    if (quickStopBtn) {
+                        quickStopBtn.style.display = 'block';
+                    }
+                    const navigationDot = document.getElementById('navigationDot');
+                    const navigationStatus = document.getElementById('navigationStatus');
+                    if (navigationDot) navigationDot.className = 'status-dot active';
+                    if (navigationStatus) navigationStatus.textContent = '导航中';
+                } else {
+                    if (navDestinationEl) navDestinationEl.textContent = '目的地: 未设置';
+                    if (navStatusEl) {
+                        navStatusEl.textContent = '状态: 就绪';
+                        navStatusEl.className = 'navigation-info ready';
+                    }
+                    if (navigationStatusIndicator) {
+                        navigationStatusIndicator.className = 'navigation-status ready';
+                    }
+                    if (navigationStatusText) {
+                        navigationStatusText.textContent = '导航系统就绪';
+                    }
+                    if (quickStopBtn) {
+                        quickStopBtn.style.display = 'none';
+                    }
+                    const navigationDot = document.getElementById('navigationDot');
+                    const navigationStatus = document.getElementById('navigationStatus');
+                    if (navigationDot) navigationDot.className = 'status-dot active';
+                    if (navigationStatus) navigationStatus.textContent = '地图就绪';
+                }
+
+                if (navDistanceEl) navDistanceEl.textContent = `距离: ${data.distance || '--'}`;
+                if (navDurationEl) navDurationEl.textContent = `预计时间: ${data.duration || '--'}`;
+            }
+
+            refreshMap() {
+                console.log('🔄 开始刷新地图...');
+                const mapFrame = document.getElementById('mapFrame');
+                if (mapFrame) {
+                    const timestamp = new Date().getTime();
+                    const random = Math.random().toString(36).substring(7);
+                    mapFrame.src = `/map?t=${timestamp}&r=${random}`;
+                    console.log(`🗺️ 地图URL已更新: /map?t=${timestamp}&r=${random}`);
+                    this.showNotification('正在刷新地图...', 'info');
+                    mapFrame.onload = () => {
+                        console.log('✅ 地图刷新完成');
+                        this.showNotification('地图已更新', 'success');
+                    };
+                    mapFrame.onerror = () => {
+                        console.error('❌ 地图刷新失败');
+                        this.showNotification('地图刷新失败', 'error');
+                    };
+                } else {
+                    console.error('❌ 未找到地图元素');
+                }
+            }
+
+            startNavigation() {
+                const destinationInput = document.getElementById('destinationInput');
+                const destination = destinationInput.value.trim();
+                if (!destination) {
+                    this.showNotification('请输入目的地', 'warning');
+                    return;
+                }
+                console.log(`🧭 开始导航到: ${destination}`);
+                this.sendCommand('navigation', `导航到${destination}`);
+                this.addCommand('导航', `导航到${destination}`);
+                this.showNotification(`正在规划到 ${destination} 的路线...`, 'info');
+                destinationInput.value = '';
+            }
+
+            stopNavigation() {
+                console.log('🛑 停止导航');
+                fetch('/api/stop_navigation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('🛑 停止导航结果:', data);
+                    if (data.status === 'success') {
+                        this.showNotification(data.message, 'success');
+                        this.refreshMap();
+                        this.loadNavigationStatus();
+                    } else {
+                        this.showNotification('停止导航失败: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ 停止导航失败:', error);
+                    this.showNotification('停止导航失败', 'error');
+                });
+                this.addCommand('导航', '停止导航');
+            }
+
+            checkNavigationStatus() {
+                console.log('🧭 检查导航状态...');
+                this.loadNavigationStatus();
+                this.showNotification('导航状态已更新', 'info');
+            }
+
+            requestSystemState() {
+                console.log('📡 请求系统状态...');
+                if (this.socket && this.socket.connected) {
+                    this.socket.emit('request_system_state');
+                    console.log('📤 已发送状态请求');
+                } else {
+                    console.warn('⚠️ 无法发送状态请求，连接未建立');
+                }
+            }
+
+            testConnection() {
+                console.log('🧪 测试WebSocket连接...');
+                if (this.socket && this.socket.connected) {
+                    this.socket.emit('test_connection', {
+                        message: '前端测试消息',
+                        timestamp: new Date().toISOString()
+                    });
+                    console.log('📤 已发送测试消息');
+                } else {
+                    console.error('❌ 连接未建立，无法测试');
+                    this.showNotification('连接未建立', 'error');
+                }
+            }
+
+            checkVoiceStatus() {
+                console.log('🎤 检查语音识别状态...');
+                fetch('/api/voice_status')
+                    .then(response => {
+                        if (response.status === 401) {
+                            window.location.href = '/login';
+                            return;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('🎤 语音状态:', data);
+                        let statusText = '';
+                        if (data.voice_recognition_enabled) {
+                            statusText = `语音识别: ${data.is_running ? '运行中' : '未运行'}, `;
+                            statusText += `连接: ${data.is_connected ? '已连接' : '未连接'}, `;
+                            statusText += `录音: ${data.is_recording ? '录音中' : '待机'}`;
+                        } else {
+                            statusText = '语音识别未启用';
+                        }
+                        this.showNotification(statusText, 'info');
+                        console.log('🎤 语音状态详情:', statusText);
+                    })
+                    .catch(error => {
+                        console.error('❌ 获取语音状态失败:', error);
+                        this.showNotification('获取语音状态失败', 'error');
+                    });
+            }
+
+            testVoiceCommand() {
+                console.log('🧪 测试语音指令...');
+                const testCommands = ['开空调', '播放音乐', '升温', '下一首', '导航到天津站'];
+                const randomCommand = testCommands[Math.floor(Math.random() * testCommands.length)];
+                fetch('/api/test_voice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: randomCommand
+                    })
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('🧪 语音测试结果:', data);
+                    this.showNotification(`测试指令: ${randomCommand}`, 'info');
+                })
+                .catch(error => {
+                    console.error('❌ 语音测试失败:', error);
+                    this.showNotification('语音测试失败', 'error');
+                });
+            }
+
+            updateConnectionStatus(connected) {
+                const connectionDot = document.getElementById('connectionDot');
+                const connectionStatus = document.getElementById('connectionStatus');
+                if (connected) {
+                    connectionDot.className = 'status-dot active';
+                    connectionStatus.textContent = '已连接';
+                } else {
+                    connectionDot.className = 'status-dot error';
+                    connectionStatus.textContent = '连接断开';
+                }
+            }
+
+            sendCommand(type, text) {
+                if (this.socket && this.socket.connected) {
+                    this.socket.emit('manual_command', {
+                        type: type,
+                        text: text
+                    });
+                } else {
+                    this.showNotification('未连接到服务器', 'error');
+                }
+            }
+
+            addCommand(type, text) {
+                const command = {
+                    type: type,
+                    text: text,
+                    time: new Date().toLocaleTimeString()
+                };
+                this.commandHistory.unshift(command);
+                if (this.commandHistory.length > 5) {
+                    this.commandHistory.pop();
+                }
+                this.updateCommandHistory();
+            }
+
+            updateCommandHistory() {
+                const historyContainer = document.getElementById('commandHistory');
+                historyContainer.innerHTML = '';
+                this.commandHistory.forEach(cmd => {
+                    const item = document.createElement('div');
+                    item.className = 'command-item slide-in';
+                    const typeClass = cmd.type === '语音' ? 'voice' :
+                                     cmd.type === '手势' ? 'gesture' :
+                                     cmd.type === '导航' ? 'navigation' : 'system';
+                    item.innerHTML = `
+                        <span class="command-type ${typeClass}">${cmd.type}</span>
+                        <span class="command-text">${cmd.text}</span>
+                        <span class="command-time">${cmd.time}</span>
+                    `;
+                    historyContainer.appendChild(item);
+                });
+            }
+
+            updatePlayButton() {
+                const playBtn = document.getElementById('musicPlayBtn');
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                if (playBtn) {
+                    let icon;
+                    if (this.currentSong.is_playing && !this.currentSong.is_paused) {
+                        icon = '⏸️';
+                    } else {
+                        icon = '▶️';
+                    }
+                    playBtn.textContent = icon;
+                }
+                if (playPauseBtn) {
+                    const span = playPauseBtn.querySelector('span');
+                    if (span) {
+                        span.textContent = this.currentSong.is_playing && !this.currentSong.is_paused ? '⏸️' : '▶️';
+                    }
+                }
+            }
+
+            updateMusicDisplay() {
+                const titleElement = document.getElementById('songTitle');
+                if (titleElement) titleElement.textContent = this.currentSong.title;
+                const artistElement = document.getElementById('songArtist');
+                if (artistElement) artistElement.textContent = this.currentSong.artist;
+                const progressFill = document.getElementById('progressFill');
+                if (progressFill) {
+                    progressFill.style.width = (this.currentSong.progress_percentage || 0) + '%';
+                }
+                const currentTimeEl = document.getElementById('currentTime');
+                const totalTimeEl = document.getElementById('totalTime');
+                if (currentTimeEl) currentTimeEl.textContent = this.currentSong.current_time_str;
+                if (totalTimeEl) totalTimeEl.textContent = this.currentSong.total_time_str;
+            }
+
+            updateVolumeDisplay() {
+                // 音量显示更新逻辑（如果需要）
+            }
+
+            updatePlaylistInfo() {
+                // 播放列表信息更新逻辑（如果需要）
+            }
+
+            // ============ 事件绑定方法 ============
+            bindEvents() {
+                // 导航控制按钮
+                document.getElementById('startNavigationBtn')?.addEventListener('click', () => {
+                    this.startNavigation();
+                    setTimeout(() => {
+                        console.log('🔄 导航开始后自动刷新地图');
+                        this.loadNavigationStatus();
+                        this.refreshMap();
+                    }, 3000);
+                });
+
+                document.getElementById('stopNavigationBtn')?.addEventListener('click', () => {
+                    this.stopNavigation();
+                    setTimeout(() => {
+                        console.log('🔄 停止导航后自动刷新地图');
+                        this.refreshMap();
+                    }, 1500);
+                });
+
+                document.getElementById('quickStopBtn')?.addEventListener('click', () => {
+                    this.stopNavigation();
+                    setTimeout(() => {
+                        this.refreshMap();
+                    }, 1500);
+                });
+
+                document.getElementById('refreshMapBtn')?.addEventListener('click', () => {
+                    this.refreshMap();
+                });
+
+                // 目的地输入框回车事件
+                document.getElementById('destinationInput')?.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.startNavigation();
+                    }
+                });
+
+                // 音乐控制按钮
+                document.getElementById('playPauseBtn')?.addEventListener('click', () => this.toggleMusic());
+                document.getElementById('musicPlayBtn')?.addEventListener('click', () => this.toggleMusic());
+                document.getElementById('nextBtn')?.addEventListener('click', () => this.nextSong());
+                document.getElementById('musicNextBtn')?.addEventListener('click', () => this.nextSong());
+                document.getElementById('prevBtn')?.addEventListener('click', () => this.prevSong());
+                document.getElementById('musicPrevBtn')?.addEventListener('click', () => this.prevSong());
+                document.getElementById('shuffleBtn')?.addEventListener('click', () => this.shuffleMusic());
+
+                // 空调控制
+                document.getElementById('acToggleBtn')?.addEventListener('click', () => this.toggleAC());
+                document.getElementById('tempUpBtn')?.addEventListener('click', () => this.adjustTemperature(1));
+                document.getElementById('tempDownBtn')?.addEventListener('click', () => this.adjustTemperature(-1));
+
+                // 车窗控制
+                document.getElementById('windowOpenBtn')?.addEventListener('click', () => this.controlWindow('open'));
+                document.getElementById('windowCloseBtn')?.addEventListener('click', () => this.controlWindow('close'));
+
+                // 灯光控制
+                document.getElementById('headlightsBtn')?.addEventListener('click', () => this.toggleLights('headlights'));
+                document.getElementById('interiorBtn')?.addEventListener('click', () => this.toggleLights('interior'));
+            }
+
+            // ============ 控制方法 ============
+            toggleMusic() {
+                let command;
+                if (this.currentSong.is_playing && !this.currentSong.is_paused) {
+                    command = '暂停';
+                } else if (this.currentSong.is_paused) {
+                    command = '播放';
+                } else {
+                    command = '播放';
+                }
+                this.sendCommand('music', command);
+                this.addCommand('手动', command);
+            }
+
+            nextSong() {
+                this.sendCommand('music', '下一首');
+                this.addCommand('音乐', '下一首');
+            }
+
+            prevSong() {
+                this.sendCommand('music', '上一首');
+                this.addCommand('音乐', '上一首');
+            }
+
+            shuffleMusic() {
+                this.sendCommand('music', '随机播放');
+                this.addCommand('手动', '随机播放');
+            }
+
+            toggleAC() {
+                this.systemData.acOn = !this.systemData.acOn;
+                const acBtn = document.getElementById('acToggleBtn');
+                if (this.systemData.acOn) {
+                    acBtn.classList.add('active');
+                } else {
+                    acBtn.classList.remove('active');
+                }
+                this.updateSystemDisplay();
+                this.addCommand('空调', this.systemData.acOn ? '开启空调' : '关闭空调');
+                this.showNotification(`空调已${this.systemData.acOn ? '开启' : '关闭'}`, 'info');
+            }
+
+            adjustTemperature(delta) {
+                this.systemData.temperature += delta;
+                this.systemData.temperature = Math.max(16, Math.min(32, this.systemData.temperature));
+                this.updateSystemDisplay();
+                this.addCommand('空调', `温度调至 ${this.systemData.temperature}°C`);
+                this.showNotification(`温度已调至 ${this.systemData.temperature}°C`, 'info');
+            }
+
+            controlWindow(action) {
+                const message = action === 'open' ? '开启车窗' : '关闭车窗';
+                this.addCommand('车窗', message);
+                this.showNotification(message, 'info');
+            }
+
+            toggleLights(type) {
+                const lightNames = {
+                    'headlights': '大灯',
+                    'interior': '室内灯'
+                };
+                const btn = document.getElementById(type + 'Btn');
+                const isActive = btn.classList.contains('active');
+                if (isActive) {
+                    btn.classList.remove('active');
+                } else {
+                    btn.classList.add('active');
+                }
+                const message = `${lightNames[type]}已${isActive ? '关闭' : '开启'}`;
+                this.addCommand('灯光', message);
+                this.showNotification(message, 'info');
+            }
+
+            updateSystemDisplay() {
+                document.getElementById('temperature').textContent = this.systemData.temperature + '°C';
+                document.getElementById('acStatus').textContent = this.systemData.acOn ? '开启' : '关闭';
+                document.getElementById('engineStatus').textContent = this.systemData.engineOn ? '启动' : '停止';
+                document.getElementById('fuelLevel').textContent = this.systemData.fuelLevel + '%';
+                document.getElementById('speed').textContent = this.systemData.speed + ' km/h';
+                document.getElementById('gear').textContent = this.systemData.gear;
+            }
+
+            updateDisplay() {
+                this.updateMusicDisplay();
+                this.updateSystemDisplay();
+            }
+
+            startSystemMonitor() {
+                setInterval(() => {
+                    document.getElementById('cpuUsage').textContent = (30 + Math.random() * 20).toFixed(0) + '%';
+                    document.getElementById('memoryUsage').textContent = (40 + Math.random() * 15).toFixed(0) + '%';
+                    document.getElementById('systemTemp').textContent = (42 + Math.random() * 8).toFixed(0) + '°C';
+                }, 3000);
+
+                setInterval(() => {
+                    if (this.socket) {
+                        if (!this.socket.connected) {
+                            console.warn('⚠️ 检测到WebSocket连接断开，尝试重连...');
+                            this.updateConnectionStatus(false);
+                            this.socket.connect();
+                        }
+                    }
+                }, 10000);
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                const colors = {
+                    success: 'linear-gradient(135deg, #00ff88, #32cd32)',
+                    error: 'linear-gradient(135deg, #ff6b6b, #ff4444)',
+                    warning: 'linear-gradient(135deg, #ffaa00, #ff8c00)',
+                    info: 'linear-gradient(135deg, #00d4ff, #5b86e5)'
+                };
+
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 30px;
+                    background: ${colors[type]};
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    z-index: 1000;
+                    animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-out 2.7s;
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    max-width: 300px;
+                    word-wrap: break-word;
+                `;
+                notification.textContent = message;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 3000);
+            }
+
+            startTimeUpdate() {
+                setInterval(() => {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+                    const systemTimeEl = document.getElementById('systemTime');
+                    if (systemTimeEl) systemTimeEl.textContent = timeStr;
+                }, 1000);
+            }
+        }
+
+        // 初始化系统
+        document.addEventListener('DOMContentLoaded', () => {
+            window.carSystem = new CarSystemUI();
+            console.log('🚗 车载多模态交互系统界面已启动（认证版本）');
+            console.log('🔧 carSystem实例已创建并设为全局变量');
+        });
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
