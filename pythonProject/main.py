@@ -976,6 +976,23 @@ class CarSystem:
 
         try:
             # 处理分心警告相关指令
+            if cmd_type == 'gesture':
+                self.system_state['gesture']['current'] = cmd_text
+                self.system_state['gesture']['last_time'] = command.get('time', time.strftime('%H:%M:%S'))
+
+                # 只有非 "None" 手势才显示通知
+                if cmd_text != "None":
+                    result = f"检测到手势: {cmd_text}"
+                    print(f"🤲 手势状态更新: {cmd_text}")
+                else:
+                    result = None
+                    print(f"🤲 手势状态: 无手势")
+
+                # 发送状态更新到前端
+                self._send_update_to_clients(result)
+                return
+
+                # 处理分心警告相关指令
             if command.get('type') == 'driver_distraction_start':
                 logger.info(f"🚨 收到分心开始指令: {original_text}")
                 self.start_distraction_alert()

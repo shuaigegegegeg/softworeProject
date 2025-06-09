@@ -461,6 +461,10 @@ class VisionRecognition:
             self.execute_gesture_command(stable_gesture)
             self.current_gesture = stable_gesture
 
+        # 🔧 新增：定期发送手势状态
+        elif self.frame_count % 60 == 0:  # 每2秒发送一次当前手势状态
+            self.command_callback('gesture', stable_gesture)
+
         # === 头部动作识别流程 ===
         raw_head_action = self.detect_head_action(face_results)
         stable_head_action = self.process_head_action_stable(raw_head_action)
