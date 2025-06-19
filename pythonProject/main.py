@@ -980,13 +980,9 @@ class CarSystem:
                 self.system_state['gesture']['current'] = cmd_text
                 self.system_state['gesture']['last_time'] = command.get('time', time.strftime('%H:%M:%S'))
 
-                # 只有非 "None" 手势才显示通知
-                if cmd_text != "None":
-                    result = f"检测到手势: {cmd_text}"
-                    print(f"🤲 手势状态更新: {cmd_text}")
-                else:
-                    result = None
-                    print(f"🤲 手势状态: 无手势")
+                # 🔧 简化：只处理有效手势，发送到前端显示
+                result = f"检测到手势: {cmd_text}"
+                print(f"🤲 手势状态更新: {cmd_text}")
 
                 # 发送状态更新到前端
                 self._send_update_to_clients(result)

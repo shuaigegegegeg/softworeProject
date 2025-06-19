@@ -252,10 +252,10 @@ class VoiceRecognition:
 
         # 新增：连续无匹配指令计数器
         self.no_match_count = 0  # 连续无匹配指令的计数
-        self.max_no_match_count = 20  # 最大连续无匹配次数
+        self.max_no_match_count = 10  # 最大连续无匹配次数
         self.no_match_restart_enabled = True  # 是否启用无匹配重启功能
         self.last_no_match_time = 0  # 最后一次无匹配的时间
-        self.no_match_time_window = 30  # 无匹配计数的时间窗口（秒）
+        self.no_match_time_window = 10  # 无匹配计数的时间窗口（秒）
 
         # 修复后的指令模式定义 - 增加更多匹配表达和导航相关指令
         self.command_patterns = {

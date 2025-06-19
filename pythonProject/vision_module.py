@@ -52,9 +52,15 @@ class VisionRecognition:
 
         # ===== 手势识别参数 =====
         self.finger_threshold = 0.02
-        self.gesture_stability_frames = 5
+        self.gesture_stability_frames = 3  # 🔧 从5改为3，提高响应速度
         self.gesture_history = deque(maxlen=self.gesture_stability_frames)
         self.current_gesture = "None"
+
+        # 🆕 新增：手势显示持续时间控制
+        self.gesture_display_time = {}  # 记录每个手势的显示时间
+        self.gesture_hold_duration = 1.0  # 手势显示持续时间（秒）
+        self.last_significant_gesture = "None"  # 上一个有意义的手势
+        self.last_significant_gesture_time = 0  # 上一个有意义手势的时间
 
         # ===== 头部动作识别参数 =====
         self.head_movement_threshold = 0.1
@@ -195,7 +201,7 @@ class VisionRecognition:
             return "None"
 
     def process_gesture_stable(self, raw_gesture):
-        """手势稳定性处理"""
+        """手势稳定性处理 - 优化版本"""
         self.gesture_history.append(raw_gesture)
 
         if len(self.gesture_history) < self.gesture_stability_frames:
@@ -209,14 +215,60 @@ class VisionRecognition:
 
         if gesture_counts:
             most_common = max(gesture_counts, key=gesture_counts.get)
-            required_count = self.gesture_stability_frames // 2 + 1
+            # 🔧 降低要求：只需要一半以上的帧都是同一手势
+            required_count = (self.gesture_stability_frames + 1) // 2
             if gesture_counts[most_common] >= required_count:
                 return most_common
 
         return self.current_gesture
 
+    def get_display_gesture(self):
+        """获取用于显示的手势（带持续时间控制）"""
+        current_time = time.time()
+
+        # 如果当前手势不是"None"，记录为有意义的手势
+        if self.current_gesture != "None":
+            self.last_significant_gesture = self.current_gesture
+            self.last_significant_gesture_time = current_time
+            return self.current_gesture
+
+        # 如果当前手势是"None"，检查是否还在显示时间内
+        if (self.last_significant_gesture != "None" and
+                current_time - self.last_significant_gesture_time < self.gesture_hold_duration):
+            return self.last_significant_gesture
+
+        # 超过显示时间，返回"None"
+        return "None"
+
+    def process_frame(self, frame):
+        """单帧处理主流程 - 优化版本"""
+        if frame is None:
+            return None
+
+        self.frame_count += 1
+        self.current_frame = frame.copy()
+
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # MediaPipe 检测
+        hands_results = self.hands.process(rgb_frame)
+        face_results = self.face_mesh.process(rgb_frame)
+
+        # === 手势识别流程 ===
+        raw_gesture = self.detect_gesture(hands_results)
+        stable_gesture = self.process_gesture_stable(raw_gesture)
+
+        if stable_gesture != self.current_gesture:
+            self.execute_gesture_command(stable_gesture)
+            self.current_gesture = stable_gesture
+
+        # 🔧 优化：更频繁地发送手势状态，使用显示手势
+        if self.frame_count % 15 == 0:  # 每0.5秒发送一次（从2秒改为0.5秒）
+            display_gesture = self.get_display_gesture()
+            self.command_callback('gesture', display_gesture)
+
     def execute_gesture_command(self, gesture):
-        """执行手势指令"""
+        """执行手势指令 - 简化版本"""
         current_time = time.time()
 
         if (gesture != "None" and
@@ -440,12 +492,12 @@ class VisionRecognition:
     # =================== 核心处理流程 ===================
 
     def process_frame(self, frame):
-        """单帧处理主流程"""
+        """单帧处理主流程 - 只发送有效手势版本"""
         if frame is None:
             return None
 
         self.frame_count += 1
-        self.current_frame = frame.copy()  # 更新当前帧
+        self.current_frame = frame.copy()
 
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -457,13 +509,18 @@ class VisionRecognition:
         raw_gesture = self.detect_gesture(hands_results)
         stable_gesture = self.process_gesture_stable(raw_gesture)
 
+        # 🔧 关键修改：只在检测到有效手势且与当前手势不同时才发送
         if stable_gesture != self.current_gesture:
-            self.execute_gesture_command(stable_gesture)
+            if stable_gesture != "None":  # 只发送非None手势
+                self.execute_gesture_command(stable_gesture)
+                print(f"🤲 检测到有效手势，发送到前端: {stable_gesture}")
+                self.command_callback('gesture', stable_gesture)
+            else:
+                print(f"🤲 手势变为None，不发送到前端")
+
             self.current_gesture = stable_gesture
 
-        # 🔧 新增：定期发送手势状态
-        elif self.frame_count % 60 == 0:  # 每2秒发送一次当前手势状态
-            self.command_callback('gesture', stable_gesture)
+        # 🔧 移除定期发送手势状态的代码，不再每15帧发送一次
 
         # === 头部动作识别流程 ===
         raw_head_action = self.detect_head_action(face_results)
@@ -484,7 +541,7 @@ class VisionRecognition:
         return display_frame
 
     def draw_interface(self, frame, hands_results, face_results):
-        """绘制用户界面"""
+        """绘制用户界面 - 优化版本"""
         if frame is None:
             return None
 
@@ -496,7 +553,7 @@ class VisionRecognition:
                     self.mp_drawing_styles.get_default_hand_landmarks_style(),
                     self.mp_drawing_styles.get_default_hand_connections_style())
 
-        # 绘制眼部关键点
+        # 绘制眼部关键点 (保持原有代码)
         if face_results.multi_face_landmarks:
             for face_landmarks in face_results.multi_face_landmarks:
                 landmarks = face_landmarks.landmark
@@ -525,8 +582,12 @@ class VisionRecognition:
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         # === 状态显示区域 ===
-        cv2.putText(frame, f"Hand: {self.current_gesture}", (20, 40),
-                    font, 0.6, (0, 255, 0), 2)
+        # 🔧 使用显示手势而不是当前手势
+        display_gesture = self.get_display_gesture()
+        gesture_color = (0, 255, 255) if display_gesture != "None" else (0, 255, 0)
+        cv2.putText(frame, f"Hand: {display_gesture}", (20, 40),
+                    font, 0.6, gesture_color, 2)
+
         cv2.putText(frame, f"Head: {self.current_head_action}", (20, 70),
                     font, 0.6, (255, 255, 0), 2)
 

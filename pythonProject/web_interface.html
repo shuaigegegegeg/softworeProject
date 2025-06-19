@@ -1156,6 +1156,10 @@
                 this.maxRetries = 5;
                 this.retryInterval = 3000;
 
+                // 🆕 手势显示控制
+                this.gestureDisplayTimeout = null;
+                this.gestureHoldDuration = 1500; // 1.5秒显示时间
+
                 this.init();
             }
 
@@ -1461,13 +1465,11 @@
                         }
                     }
 
-                    // 更新手势状态
-                    if (data.state.gesture) {
-                        const gestureStateElement = document.getElementById('gestureState');
-                        if (gestureStateElement) {
-                            gestureStateElement.textContent = data.state.gesture.current;
-                        }
+                    if (data.state && data.state.gesture) {
+                        this.updateGestureDisplay(data.state.gesture.current);
                     }
+
+
                 }
 
                 if (data.state.driver) {
@@ -2314,6 +2316,33 @@
                 } catch (error) {
                     console.error('❌ 获取家位置信息异常:', error);
                 }
+            }
+
+            updateGestureDisplay(newGesture) {
+                const gestureStateElement = document.getElementById('gestureState');
+                if (!gestureStateElement) return;
+
+                // 🔧 简化逻辑：因为后端只发送有效手势，所以直接显示
+                console.log(`🤲 收到手势: ${newGesture}`);
+
+                // 立即显示手势
+                gestureStateElement.textContent = newGesture;
+                gestureStateElement.style.color = '#00ff88'; // 绿色表示活跃
+
+                // 清除之前的超时
+                if (this.gestureDisplayTimeout) {
+                    clearTimeout(this.gestureDisplayTimeout);
+                }
+
+                // 设置超时，在指定时间后恢复到"无"状态
+                this.gestureDisplayTimeout = setTimeout(() => {
+                    gestureStateElement.textContent = '无';
+                    gestureStateElement.style.color = 'rgba(255, 255, 255, 0.7)';
+                    console.log(`🤲 手势显示超时，恢复为"无"`);
+                }, this.gestureHoldDuration);
+
+                // 显示通知
+                this.showNotification(`检测到手势: ${newGesture}`, 'info');
             }
         }
 
