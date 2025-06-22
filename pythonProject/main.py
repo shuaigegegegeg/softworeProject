@@ -13,11 +13,11 @@ from flask import Flask,render_template_string, jsonify, request, Response, send
     flash, render_template
 from flask_socketio import SocketIO, emit
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, RegistrationCode          # ← 统一引用
+from models import db, User, RegistrationCode 
 from werkzeug.security import generate_password_hash, check_password_hash
 import cv2
 import pyttsx3
-from auth import init_auth, login_manager  # 新增
+from auth import init_auth, login_manager 
 import secrets
 import string
 from werkzeug.security import generate_password_hash
