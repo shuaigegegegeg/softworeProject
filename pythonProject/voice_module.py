@@ -102,7 +102,7 @@ class VoiceResponse:
                             self.engine.setProperty('voice', voice.id)
                             break
             except:
-                pass  # 如果设置语音失败，使用默认语音
+                pass 
 
             self.is_initialized = True
             print("✅ 语音输出模块初始化成功")

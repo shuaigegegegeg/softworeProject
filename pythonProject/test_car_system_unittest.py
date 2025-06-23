@@ -616,7 +616,6 @@ class TestErrorHandling(unittest.TestCase):
 
 def run_all_tests():
     """运行所有测试"""
-    # 创建测试套件
     test_suite = unittest.TestSuite()
 
     # 添加所有测试类
@@ -636,11 +635,9 @@ def run_all_tests():
         tests = unittest.TestLoader().loadTestsFromTestCase(test_class)
         test_suite.addTests(tests)
 
-    # 运行测试
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(test_suite)
 
-    # 打印结果摘要
     print("\n" + "=" * 70)
     print("📊 测试结果摘要")
     print("=" * 70)
@@ -666,11 +663,10 @@ def run_all_tests():
 def run_specific_test(test_class_name=None, test_method_name=None):
     """运行特定的测试"""
     if test_class_name:
-        # 获取测试类
+
         test_class = globals().get(test_class_name)
         if test_class:
             if test_method_name:
-                # 运行特定方法
                 suite = unittest.TestSuite()
                 suite.addTest(test_class(test_method_name))
             else:
